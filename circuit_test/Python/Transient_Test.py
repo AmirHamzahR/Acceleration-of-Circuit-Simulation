@@ -5,10 +5,13 @@
 	i'(t) = -Ri(t)/L - 1/L * Vc(t)
 	Vc'(t) = i(t)/c
 """
-
+import time as tm
 import numpy as np
 from numpy.linalg import inv
 import matplotlib.pyplot as plt
+
+# get the start time
+st = tm.time()
 
 L = 1.5 	# Inductance value in Henry
 C = 0.0001 	# capacitance in F
@@ -51,7 +54,7 @@ x3 = 0
 # Defining the Time and Timestep for Transient Simulation
 t_start = 0
 t_end = 10 * 0.05
-n = 501
+n = 50001
 h = (t_end - t_start) / (n-1)
 t = np.arange(t_start, t_end + h, h)
 
@@ -80,8 +83,8 @@ for i in range (0, len(t)):
 	error = 9e9
 
 	# Log message 1
-	log_message_1 = 'At Time t = {}'.format(t[i])
-	print(log_message_1)
+	#log_message_1 = 'At Time t = {}'.format(t[i])
+	#print(log_message_1)
 
 	# Inner Loop - Starting the Newton Raphson Method
 	
@@ -108,8 +111,8 @@ for i in range (0, len(t)):
 		x2 = X_new[1]
 
 		# Log message 2
-		log_message_2 = 'Iteration = {0}, x1 = {1}, x2 = {2}'.format(iter, x1, x2)
-		print(log_message_2)
+		#log_message_2 = 'Iteration = {0}, x1 = {1}, x2 = {2}'.format(iter, x1, x2)
+		#print(log_message_2)
 
 		# Updating the Iteration
 		iter = iter + 1
@@ -130,4 +133,13 @@ plt.legend()
 plt.grid(which='major')
 plt.minorticks_on()
 plt.grid(which='minor', alpha=0.2)
+
+
+# get the end time
+et = tm.time()
+
+# get the execution time
+elapsed_time = et - st
+print('Execution time:', elapsed_time, 'seconds')
+
 plt.show()
