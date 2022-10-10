@@ -77,4 +77,4 @@ My supervisor had checked my code and commented that it should be more generic a
 
 ## 10/10/2022
 
-Today, I am trying to make a pseudocode that could relate both the code that I have made which uses transient simulation with the modified nodal analysis using LU decomposition. 
+Today, I am trying to make a pseudocode that could relate both the code that I have made which uses transient simulation with the modified nodal analysis using LU decomposition. As found from this [lecture](https://pages.mtu.edu/~zhuofeng/EE5780Fall2013_files/Lecture_07_SpiceSimulation.pdf), the component values should start with MNA stamps as a good foundation in creating the circuit matrix. From this, the code should be changed from using hard-coded nodal equations into using MNA matrices derived from the nodal equations and MNA stamps.
