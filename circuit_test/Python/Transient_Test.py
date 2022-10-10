@@ -82,10 +82,6 @@ for i in range (0, len(t)):
 	# Initial error
 	error = 9e9
 
-	# Log message 1
-	#log_message_1 = 'At Time t = {}'.format(t[i])
-	#print(log_message_1)
-
 	# Inner Loop - Starting the Newton Raphson Method
 	
 	while error > tol:
@@ -109,10 +105,6 @@ for i in range (0, len(t)):
 		# Final Results at the given timestep
 		x1 = X_new[0]
 		x2 = X_new[1]
-
-		# Log message 2
-		#log_message_2 = 'Iteration = {0}, x1 = {1}, x2 = {2}'.format(iter, x1, x2)
-		#print(log_message_2)
 
 		# Updating the Iteration
 		iter = iter + 1
