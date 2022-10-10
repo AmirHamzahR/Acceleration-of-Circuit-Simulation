@@ -30,3 +30,20 @@ The code runs well and could differentiate the lower and upper triangle of the m
 
 ![](circuit_test/C++/LUdecomp_t1.png)
 
+## 28/9/2022
+
+A new method of solving the matrix equation using LU decomposition can now be used. This involves the usage of the "solve" function.
+
+## 30/9/2022
+
+Currently, the priority has been shifted back into developing a transient simulation using MATLAB rather than learning how to create one in C++.
+I have found a method in creating transient simulation using Newton Raphson, Backward-Euler integration, and LU decomposition in MATLAB.
+
+I am trying to create a newton Raphson algorithm in MATLAB that uses the Jacobian matrix method. The method worked and matrix functions could be solved. I am planning to integrate the newton Raphson Jacobian solver with the Euler backward method for transient simulation.
+
+## 5/10/2022
+
+The integration between Newton Raphson using Jacobian matrix solver has been finished and could be run properly. The results from the transient simulation were compared between the two languages which were MATLAB and Python. 
+
+THe code simulates an RLC circuit with the variables being, R is 1 ohm, L is 1.5H, and C being 0.0001F of a total 0.5s with n = 500 iterations and h = 0.001 time steps. The MATLAB code uses both backward and forward Euler integration while solving the values for capacitor voltage and current voltage. After simulating, the forward and backward Euler for the current values over time can be seen to be: 
+
