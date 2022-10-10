@@ -76,3 +76,5 @@ To confirm this analysis is correct, a transient simulation using LTSpice and ng
 My supervisor had checked my code and commented that it should be more generic as bigger and more complex circuits will be analysed. A suggestion is that V_pulse for the voltage source should be added for the transient analysis code since currently it only simulates the steady state analysis. The code should also contain matrices as input for the project compared to using normal function variables.
 
 ## 10/10/2022
+
+Today, I am trying to make a pseudocode that could relate both the code that I have made which uses transient simulation with the modified nodal analysis using LU decomposition. 
