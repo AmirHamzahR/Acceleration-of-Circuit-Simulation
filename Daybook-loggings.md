@@ -16,5 +16,5 @@ I continued learning more on [learncpp](https://www.learncpp.com/) for declarati
 ## 26/9/2022
 
 My supervisor had advised to use the Armadillo library as a start for the project. I have started to test out the Armadillo library in VScode for C++. I have ran the code from [solarianprogrammer.com](https://solarianprogrammer.com/2017/03/24/getting-started-armadillo-cpp-linear-algebra-windows-mac-linux/) to test out the Armadillo library. The results are shown below:
-![](main/circuit_test/C++/Arma_test.png)
+![https://github.com/AmirHamzahR/Acceleration-of-Circuit-Simulation/blob/main/circuit_test/C++/Arma_test.png?raw=true](https://github.com/AmirHamzahR/Acceleration-of-Circuit-Simulation/blob/main/circuit_test/C%2B%2B/Arma_test1.png)
 
