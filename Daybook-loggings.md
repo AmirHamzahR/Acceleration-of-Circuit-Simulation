@@ -45,5 +45,34 @@ I am trying to create a newton Raphson algorithm in MATLAB that uses the Jacobia
 
 The integration between Newton Raphson using Jacobian matrix solver has been finished and could be run properly. The results from the transient simulation were compared between the two languages which were MATLAB and Python. 
 
-THe code simulates an RLC circuit with the variables being, R is 1 ohm, L is 1.5H, and C being 0.0001F of a total 0.5s with n = 500 iterations and h = 0.001 time steps. The MATLAB code uses both backward and forward Euler integration while solving the values for capacitor voltage and current voltage. After simulating, the forward and backward Euler for the current values over time can be seen to be: 
+THe code simulates an RLC circuit with the variables being, R is 1 ohm, L is 1.5H, and C being 0.0001F of a total 0.5s with n = 500 iterations and h = 0.001s time steps. The MATLAB code uses both backward and forward Euler integration while solving the values for capacitor voltage and current voltage. After simulating, the forward and backward Euler for the current values over time can be seen to be: 
 
+![](circuit_test/matlab/RLC_eulersim.png)
+
+There is a noticeable difference between the two methods due to the time step being quite huge. This is due to the nature of the assumption of Euler's backward and forward integration which has an error of O(n^2). In order to have a more accurate result, the time steps will be smaller while the number of iterations is increased. This is by setting h = 0.0001 and N = 50000. The results are shown below:
+
+![](circuit_test/matlab/Accurate_eulersim.png)
+
+Simulation in python for the correct transient analysis will be done next.
+
+## 6/10/2022 
+
+A python code has been made by solving both the function and jacobian matrices using matmul function from the numpy library. By using the same RLC circuit variables and arrangements, the results of the code simulation could be seen to be:
+
+![](circuit_test/Python/NR_simpleRLC_50k.png)
+
+The red line shows the current of the capacitor while the blue line shows the voltage of the capacitor. For a more detailed analysis of the current, this can be done by zooming in which shows:
+
+![](circuit_test/Python/Zoomed_NR_simpleRLC.png)
+
+It can be seen that it is similar to the MATLAB results which means that the Newton-Raphson using Jacobian matrix solver is accurate. However, it took the python program to run longer than the MATLAB program. Some changes will be done in the Transient_Test.py code, could be due to the log.message and print statement for the solved values. The time module from [pynative](https://pynative.com/python-get-execution-time-of-program/) will be used to analyse the amount of time taken for the code to execute the simulation.
+
+The total execution time of the code with log.message is 165.326205 seconds. However, without the log.message and print statements in the loop, the total execution time of the code is only 14.2928447 seconds. This proves that my theory is correct and the log.message with print statements will be commented out for performance purposes.
+
+To confirm this analysis is correct, a transient simulation using LTSpice and ngspice will be done.
+
+## 7/10/2022
+
+My supervisor had checked my code and commented that it should be more generic as bigger and more complex circuits will be analysed. A suggestion is that V_pulse for the voltage source should be added for the transient analysis code since currently it only simulates the steady state analysis. The code should also contain matrices as input for the project compared to using normal function variables.
+
+## 10/10/2022
