@@ -87,4 +87,10 @@ A generic code for a simple 5x5 matrix linear circuit has been made! The MNA sta
 
 The python code has been added into the repository for supervisor's comment and further improvement in making it even more generic and efficient. The results of the linear circuit analysis from the python code is the same with the LTSpice OP analysis. The comparison between the two is shown below:
 
+Python:
+![](circuit_test/Python/Linear_test1.png)
+LTspice:
+![](circuit_test/Python/linear_test1_lts.png)
+
+
 Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits.
