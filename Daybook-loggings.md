@@ -92,5 +92,4 @@ Python:
 LTspice:
 ![](circuit_test/Python/linear_test1_lts.png)
 
-
-Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits.
+The orderings are seem to be different due to different naming convention on the LTspice models but the results are the same nonetheless. Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits. I will also try to add more components to be simulated for (eg. capacitor, voltage source, inductor)
