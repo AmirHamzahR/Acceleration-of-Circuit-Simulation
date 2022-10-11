@@ -80,3 +80,11 @@ My supervisor had checked my code and commented that it should be more generic a
 Today, I am trying to make a pseudocode that could relate both the code that I have made which uses transient simulation with the modified nodal analysis using LU decomposition. As found from this [lecture](https://pages.mtu.edu/~zhuofeng/EE5780Fall2013_files/Lecture_07_SpiceSimulation.pdf), the component values should start with MNA stamps as a good foundation in creating the circuit matrix. From this, the code should be changed from using hard-coded nodal equations into using MNA matrices derived from the nodal equations and MNA stamps.
 
 The target size for the circuit simulation should consist of 5x5 matrix for the simple circuit.
+
+## 11/10/2022
+
+A generic code for a simple 5x5 matrix linear circuit has been made! The MNA stamps for resistor and current sources has been added and was successfully analysed with a simple circuit. The  circuit that was used was from the lecture [ECSE 597 Circuit Simulation and Modelling](https://www.youtube.com/watch?v=Eh3KzhcnpWw&list=PLlsTHbFeR7v0QG8Q4l6oc7d---eKKSKTz&index=2) that explains about MNA stamps. 
+
+The python code has been added into the repository for supervisor's comment and further improvement in making it even more generic and efficient. The results of the linear circuit analysis from the python code is the same with the LTSpice OP analysis. The comparison between the two is shown below:
+
+Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits.
