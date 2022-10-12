@@ -100,5 +100,11 @@ A comparison between the speed of my own plu_solver function with numpy's linalg
 
 The effort in making the code more generic is currently focused on how to ensure that the size of the matrix is not hardcoded. An improvement has been made as the size of the matrix could be seen to be depending on the total number of nodes and voltage sources. Thus, the size of the matrix is now depending on that rather than being hardcoded. This makes the circuit simulator a step closer as its ancestor, ngspice.
 
-The code can now simulate any linear resistive networks with voltage sources, resistors and current sources. The next step is to add non-linear variable, maybe a diode and see how it will serve. The tests of accuracy for the code was made using LTSpice and the results are shown below:
+The code can now simulate any linear resistive networks with voltage sources, resistors and current sources. I have added a few functions which could manage the matrices properly. The tests of accuracy for the code was made using LTSpice and the results are shown below:
 
+Python: 
+![](circuit_test/Python/Added_VS.png)
+LTSpice:
+![](circuit_test/Python/linear_test2_lts.png)
+
+The values before this run were all negative with the same magnitude, which was a bit weird. I later found that my code actually has opposite direction of the nodes which I then changed and received the 100% accuracy of the simulation. The next step is to add non-linear components and variables, maybe a diode and see how it will serve. An idea of expansion is trying to get the user input which will drastically become more similar to a SPICE simulator.
