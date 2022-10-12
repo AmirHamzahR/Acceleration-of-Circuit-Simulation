@@ -87,4 +87,18 @@ A generic code for a simple 5x5 matrix linear circuit has been made! The MNA sta
 
 The python code has been added into the repository for supervisor's comment and further improvement in making it even more generic and efficient. The results of the linear circuit analysis from the python code is the same with the LTSpice OP analysis. The comparison between the two is shown below:
 
-Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits.
+Python:
+![](circuit_test/Python/Linear_test1.png)
+LTspice:
+![](circuit_test/Python/linear_test1_lts.png)
+
+The orderings are seem to be different due to different naming convention on the LTspice models but the results are the same nonetheless. Tomorrow, I will simulate 2 more linear circuit from this code and then move on towards non-linear circuits. I will also try to add more components to be simulated for (eg. capacitor, voltage source, inductor)
+
+## 12/10/2022
+
+A comparison between the speed of my own plu_solver function with numpy's linalg.solve function has been made. The comparison was made using python's time library. Both seems to have a similar speed by which the linalg.solve is around 0.001-0.003 seconds while my plu_solver function is around 0.001-0.003 too.
+
+The effort in making the code more generic is currently focused on how to ensure that the size of the matrix is not hardcoded. An improvement has been made as the size of the matrix could be seen to be depending on the total number of nodes and voltage sources. Thus, the size of the matrix is now depending on that rather than being hardcoded. This makes the circuit simulator a step closer as its ancestor, ngspice.
+
+The code can now simulate any linear resistive networks with voltage sources, resistors and current sources. The next step is to add non-linear variable, maybe a diode and see how it will serve. The tests of accuracy for the code was made using LTSpice and the results are shown below:
+
