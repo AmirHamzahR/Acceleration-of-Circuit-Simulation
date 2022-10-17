@@ -108,3 +108,11 @@ LTSpice:
 ![](circuit_test/Python/linear_test2_lts.png)
 
 The values before this run were all negative with the same magnitude, which was a bit weird. I later found that my code actually has opposite direction of the nodes which I then changed and received the 100% accuracy of the simulation. The next step is to add non-linear components and variables, maybe a diode and see how it will serve. An idea of expansion is trying to get the user input which will drastically become more similar to a SPICE simulator.
+
+## 13/10/2022
+
+The 4th week meeting with supervisor was done. Dr Danial gave really good insights in future prospects and suggestions on improving the recent circuit matrices code. One of the suggestions is to add in the dynamic elements first rather than adding non-linear components as that will be the key for the transient simulation. If that is finished, the future prospect of the python script is then to add non-linear components and VCCS or ICCS sources. These will then open the window on making a random circuit generator with the goal of randomizing a 20 by 20 circuit matrix. 
+
+## 17/10/2022
+
+The goal for today is to add in dynamic elements inside the circuit such as capacitors and inductors. At the same time, pulse voltage source will also be added since it varies with time. The variables will be analysed using Newton-Raphson solver for the iterations. In the Newton-Raphson solver, the Jacobian matrix will be used to test the matrices.
