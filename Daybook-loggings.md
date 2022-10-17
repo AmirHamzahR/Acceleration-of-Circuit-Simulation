@@ -115,4 +115,4 @@ The 4th week meeting with supervisor was done. Dr Danial gave really good insigh
 
 ## 17/10/2022
 
-The goal for today is to add in dynamic elements inside the circuit such as capacitors and inductors. At the same time, pulse voltage source will also be added since it varies with time. The variables will be analysed using Newton-Raphson solver for the iterations. In the Newton-Raphson solver, the Jacobian matrix will be used to test the matrices.
+The goal for today is to add in dynamic elements inside the circuit such as capacitors and inductors. At the same time, pulse voltage source will also be added since it varies with time (time-variant sources). The variables will be analysed using Newton-Raphson solver for the iterations. In the Newton-Raphson solver, the Jacobian matrix will be used to test the matrices. As for now, the voltage source and current source that will added are the independent ones.
