@@ -115,4 +115,20 @@ The 4th week meeting with supervisor was done. Dr Danial gave really good insigh
 
 ## 17/10/2022
 
-The goal for today is to add in dynamic elements inside the circuit such as capacitors and inductors. At the same time, pulse voltage source will also be added since it varies with time (time-variant sources). The variables will be analysed using Newton-Raphson solver for the iterations. In the Newton-Raphson solver, the Jacobian matrix will be used to test the matrices. As for now, the voltage source and current source that will added are the independent ones.
+The goal for today is to add in dynamic elements inside the circuit such as capacitors and inductors. At the same time, pulse voltage source will also be added since it varies with time (time-variant sources). The variables will be analysed using Newton-Raphson solver for the iterations. In the Newton-Raphson solver, the Jacobian matrix will be used to test the matrices. As for now, the voltage source and current source that will added are the independent ones. 
+
+## 18/10/2022
+
+The dynamic elements were a bit hard to be added due to the Newton-Raphson Jacobian matrix solver is still using hard-coded functions. I have found a method of making the Jacobian matrix more generic and less hard-coded. The Jacobian matrix is actually just another set of conductance or dynamic element matrix, so this can be applied using MNA to get the Jacobian matrix. Since most of the methods of using Jacobian matrices are dependent on the functions of the nodal analysis, I can use MNA to derive the "hard-coded" functions by expanding the MNA to get the nodal analysis equations.  
+
+From NewtonNonlinear.py code, I have changed the F_value from using the hard-coded F(x) function into using the expansion of J(x) with x values substracted by the RHS of the MNA equation. This makes the iteration a bit longer, but the code can now be more generic compared to before. The comparison of solutions using hard-coded function and the more generic method can be seen below.
+
+Hard-coded:
+#Will update hardcoded.png
+
+Generic:
+#Will update generic.png
+
+A tolerance of 1e-9 was chosen as that gives the least iteration for the most accurate value for both the hard-coded and generic methods.
+
+
