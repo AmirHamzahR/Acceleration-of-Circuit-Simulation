@@ -124,11 +124,10 @@ The dynamic elements were a bit hard to be added due to the Newton-Raphson Jacob
 From NewtonNonlinear.py code, I have changed the F_value from using the hard-coded F(x) function into using the expansion of J(x) with x values substracted by the RHS of the MNA equation. This makes the iteration a bit longer, but the code can now be more generic compared to before. The comparison of solutions using hard-coded function and the more generic method can be seen below.
 
 Hard-coded:
-#Will update hardcoded.png
+![](circuit_test/Python/hardcoded_nonL.png)
 
 Generic:
-#Will update generic.png
-
+![](circuit_test/Python/genericcode_nonL.png)
 A tolerance of 1e-9 was chosen as that gives the least iteration for the most accurate value for both the hard-coded and generic methods.
 
 
