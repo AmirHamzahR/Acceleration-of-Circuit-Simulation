@@ -5,7 +5,7 @@ Expansions:
 1) Try to use LU decomposition to solve the circuit
 2) Increase the size of the circuit
 """
-from importlib.abc import ResourceReader
+
 import time as tm
 import numpy as np
 
