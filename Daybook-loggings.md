@@ -130,7 +130,9 @@ Generic:
 ![](circuit_test/Python/genericcode_nonL.png)
 
 A tolerance of 1e-9 was chosen as that gives the least iteration for the most accurate value for both the hard-coded and generic methods. This analysis is based from the circuit below which contain a non-linear capacitor, a non-linear resistor, and a voltage source. The circuit is shown below:
+
 ![](circuit_test/Python/Nonlinear_circuit.png)
+
 This circuit analysis is based on this research paper which studies regarding MNA, Newton Raphson and Transient simulations, from [Opal, A. (2007) Computer-Aided Design, The Electrical Engineering Handbook. Academic Press.](https://www.sciencedirect.com/science/article/pii/B9780121709600500062)
 
 ## 19/10/2022
