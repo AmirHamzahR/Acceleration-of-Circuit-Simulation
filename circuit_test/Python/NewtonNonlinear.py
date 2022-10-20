@@ -16,7 +16,7 @@ def F(x):
 def J(x):
         return np.array(
             [[1/1000, -1/1000, 1],
-            [-1/1000, (1+(x[1])**2)/1000, 0],
+            [-1/1000, (1+(x[1])**2)/1000, 0], # Need to add 3 as coefficient of x[1] to simulate the hard-coded function
             [1, 0, 0]])
 
 def Newton_system(x_guess, eps):
@@ -28,16 +28,16 @@ def Newton_system(x_guess, eps):
     """
     RHS = np.array([0,0,1])
     x_old = x_guess
-    F_x = np.matmul(J(x_old),x_old)-RHS # Used to get the generic function equations
+    F_x = np.matmul(J(x_old),x_old)-RHS # "Generic" expanded Jacobian input
     error = 9e9
-    #F_value = F(x_old)  #Ganti input function dekat sini
-    F_value = F_x  
+    #F_value = F(x_old)  # Hard-coded input
+    F_value = F_x  # "Generic" expanded Jacobian input
     iteration_counter = 0
     while error > eps and iteration_counter < 5000:
         delta = np.linalg.solve(J(x_old), F_value)
         x_new = x_old - delta
-        #F_value = F(x_new)
-        F_value = np.matmul(J(x_new),x_new)-RHS
+        #F_value = F(x_new) # Hard-coded input
+        F_value = np.matmul(J(x_new),x_new)-RHS # "Generic" expanded Jacobian input
         error = np.max(np.abs(x_new - x_old))
         x_old = x_new
         iteration_counter += 1
