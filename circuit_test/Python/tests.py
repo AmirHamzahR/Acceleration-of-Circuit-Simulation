@@ -1,5 +1,5 @@
 '''Just an area to test out different functions if it works or not'''
-import numpy as np
+'''import numpy as np
 
 def mat_ext(M):
     a = np.shape(M)
@@ -43,4 +43,19 @@ a = add_values(M,2,3)
 b = add_values(a,1,2)
 
 print(a)
-print(b)
+print(b)'''
+
+import numpy as np
+def F(i):
+    x = np.zeros((len(i),1))
+    return x
+x = [5]
+lol = [
+    1,
+    1,
+    1,
+    1,
+    1
+]
+
+print(x)

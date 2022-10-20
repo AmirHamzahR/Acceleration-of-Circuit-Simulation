@@ -5,8 +5,8 @@ Created on Thu Jul 14 13:51:11 2022
 @author: Roxas
 """
 import numpy as np
+import time as tm
 import matplotlib.pyplot as plt
-
 def F(x):
         return np.array(
             [(x[0]-x[1])/1000 + x[2],
@@ -16,37 +16,42 @@ def F(x):
 def J(x):
         return np.array(
             [[1/1000, -1/1000, 1],
-            [-1/1000, (1+3*(x[1]**2))/1000 + (3*(x[1]**2))/(1000*0.1), 0],
+            [-1/1000, (1+(x[1])**2)/1000, 0],
             [1, 0, 0]])
 
-def Newton_system(F, J, x, eps):
+def Newton_system(x_guess, eps):
     """
     Solve nonlinear system F=0 by Newton's method.
     J is the Jacobian of F. Both F and J must be functions of x.
     At input, x holds the start value. The iteration continues
     until ||F|| < eps.
     """
-    F_value = F(x)
-    F_norm = np.linalg.norm(F_value, ord=2)  # l2 norm of vector
+    RHS = np.array([0,0,1])
+    x_old = x_guess
+    F_x = np.matmul(J(x_old),x_old)-RHS # Used to get the generic function equations
+    error = 9e9
+    #F_value = F(x_old)  #Ganti input function dekat sini
+    F_value = F_x  
     iteration_counter = 0
-    while abs(F_norm) > eps and iteration_counter < 5000:
-        delta = np.linalg.solve(J(x), -F_value)
-        x = x + delta
-        F_value = F(x)
-        F_norm = np.linalg.norm(F_value, ord=2)
+    while error > eps and iteration_counter < 5000:
+        delta = np.linalg.solve(J(x_old), F_value)
+        x_new = x_old - delta
+        #F_value = F(x_new)
+        F_value = np.matmul(J(x_new),x_new)-RHS
+        error = np.max(np.abs(x_new - x_old))
+        x_old = x_new
         iteration_counter += 1
-        print(x,iteration_counter)
+        print(x_new,iteration_counter)
 
     # Here, either a solution is found, or too many iterations
-    if abs(F_norm) > eps:
+    if error > eps:
         iteration_counter = -1
-    return x, iteration_counter
+    return x_new, iteration_counter
 
 
 expected = np.array([1, 0.7, -0.003])
-#tol = 1e-8
-ans, n = Newton_system(F, J, x=np.array([1, 0, -0.001]), eps=1e-16)
-#print(n, ans)
-error_norm = np.linalg.norm(expected - ans, ord=2)
-#assert error_norm < tol, 'norm of error =%g' % error_norm
-print('norm of error =%g' % error_norm)
+st = tm.time()
+ans, n = Newton_system(x_guess = np.array([1, 0.6823, -0.003]), eps=1e-9)
+et = tm.time()
+diff = et - st
+print("The amount of time taken is", diff)

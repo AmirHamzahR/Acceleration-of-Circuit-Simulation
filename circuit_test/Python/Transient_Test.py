@@ -7,15 +7,15 @@
 """
 import time as tm
 import numpy as np
+import scipy as sci
 from numpy.linalg import inv
 import matplotlib.pyplot as plt
 
-# get the start time
-st = tm.time()
+
 
 L = 1.5 	# Inductance value in Henry
 C = 0.0001 	# capacitance in F
-R = 0 		# resistance in Ohm, R is considered to be zero
+R = 100 		# resistance in Ohm, R is considered to be zero
 h = 0.001 	# time interval
 
 # Defining the Non-Linear Equations Function
@@ -62,6 +62,8 @@ t = np.arange(t_start, t_end + h, h)
 X1 = np.ones((n,1))
 X2 = np.ones((n,1))
 
+# get the start time
+st = tm.time()
 # Outer Time Loop
 
 for i in range (0, len(t)):
@@ -76,7 +78,7 @@ for i in range (0, len(t)):
 
 	# Parameters for Newton Raphson Solver
 	alpha = 1
-	tol = 1e-10
+	tol = 1e-16
 	iter = 1
 
 	# Initial error
@@ -87,14 +89,14 @@ for i in range (0, len(t)):
 	while error > tol:
 		
 		# Computing the Jacobian
-		J = jacobian(X_old[0], X_old[1], X_guess[0], X_guess[1],  h);
+		J = jacobian(X_old[0], X_old[1], X_guess[0], X_guess[1],  h)
 
 		# Computing the F vector
-		F[0] = f1(X_old[0], X_guess[0], X_guess[1], h);
-		F[1] = f2(X_old[1], X_guess[0], X_guess[1], h);
+		F[0] = f1(X_old[0], X_guess[0], X_guess[1], h)
+		F[1] = f2(X_old[1], X_guess[0], X_guess[1], h)
 
 		# Computing new values
-		X_new = X_guess - alpha*np.matmul(inv(J), F)
+		X_new = X_guess - alpha*np.linalg.solve((J), F)
 
 		# Computing the maximum absolute error
 		error = np.max(np.abs(X_new - X_guess))
@@ -115,6 +117,9 @@ for i in range (0, len(t)):
 	
 # Plotting the Graph
 
+# get the end time
+et = tm.time()
+
 plt.plot(t, X1, color = 'red', label = '$x_1$')
 plt.plot(t, X2, color = 'blue', label = '$x_2$')
 plt.xlabel('Time ($s$)')
@@ -127,8 +132,7 @@ plt.minorticks_on()
 plt.grid(which='minor', alpha=0.2)
 
 
-# get the end time
-et = tm.time()
+
 
 # get the execution time
 elapsed_time = et - st

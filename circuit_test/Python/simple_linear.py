@@ -9,7 +9,16 @@ Expansions:
 import time as tm
 import numpy as np
 
-#Functions that defines the different stamps for the resistor, voltage source, and current source
+# Function for the iterations of a set of unknowns that we are trying to solve
+def X(i):
+    x = np.zeros((len(i),1))
+    return x
+
+# Function to add the matrices within each other after each iteration?
+
+
+
+# Functions that defines the different stamps for the resistor, voltage source, and current source
 def cond(R):
     g = 1/R
     return g
@@ -214,9 +223,13 @@ R_stamp = [
 # Adding the resistor values from the stamp to create the overall RHS matrix
 T_R = mat_sum(R_stamp)
 
-#Adding the branch values from different stamp sources (eg. Voltage source, VCCS)
+# Adding the branch values from different stamp sources (eg. Voltage source, VCCS)
 LHS = branch_ext(T_R,0,1)
 print(LHS)
+
+# Create the function matrices of the variables that are going to be used
+new_LHS = np.dot(LHS, X(LHS))
+
 
 # A function that could analyse and use the stamps to create an MNA circuit matrix
 # get the start time
