@@ -128,6 +128,11 @@ Hard-coded:
 
 Generic:
 ![](circuit_test/Python/genericcode_nonL.png)
-A tolerance of 1e-9 was chosen as that gives the least iteration for the most accurate value for both the hard-coded and generic methods.
+
+A tolerance of 1e-9 was chosen as that gives the least iteration for the most accurate value for both the hard-coded and generic methods. This analysis is based from the circuit below which contain a non-linear capacitor, a non-linear resistor, and a voltage source. This circuit analysis is based on this research paper which studies regarding MNA, Newton Raphson and Transient simulations, from [Opal, A. (2007) Computer-Aided Design, The Electrical Engineering Handbook. Academic Press.](https://www.sciencedirect.com/science/article/pii/B9780121709600500062)
+
+## 19/10/2022
+
+I have noticed that the expansion of the Jacobian matrix actually needs integration of the variables that we are trying to solve since it was from a derivative of the nodal analysis. This means that the expansion method that was used in NewtonNonlinear.py is not actually accurate even though it can solve for the iteration values. A thorough research on Jacobian matrix, conductance matrix and the nodal analysis function will be done again.
 
 
