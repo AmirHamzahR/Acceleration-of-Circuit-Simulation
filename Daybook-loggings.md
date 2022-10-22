@@ -139,4 +139,10 @@ This circuit analysis is based on this research paper which studies regarding MN
 
 I have noticed that the expansion of the Jacobian matrix actually needs integration of the variables that we are trying to solve since it was from a derivative of the nodal analysis. This means that the expansion method that was used in NewtonNonlinear.py is not actually accurate even though it can solve for the iteration values. A thorough research on Jacobian matrix, conductance matrix and the nodal analysis function will be done again.
 
+## 21/10/2022
+
+I have managed to utilize the Jacobian matrix and Newton-Raphson iterative method for the non-linear part of the circuit. The circuit that was analysed is the Wheatstone bridge circuit. The arrangement of the circuit in LTSpice can be seen below:
+
+
+
 
