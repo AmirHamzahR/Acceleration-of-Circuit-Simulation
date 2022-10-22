@@ -15,7 +15,7 @@ R4 = 2e3 # ohms
 I0 = 3e-9 # A
 VT = 0.05 # V
 
-tol = 1e-14
+tol = 1e-9
 
 def f1(V):
     v1 = V[0]; v2 = V[1]
@@ -23,7 +23,7 @@ def f1(V):
 
 def f2(V):
     v1 = V[0]; v2 = V[1]
-    return( -(v2-Vp)/R3 - v2/R4 + I0*(np.exp((v1-v2)/VT)-1) )
+    return( (v2-Vp)/R3 + v2/R4 - I0*(np.exp((v1-v2)/VT)-1) )
 
 def j11(V):
     v1 = V[0]; v2 = V[1]
@@ -35,16 +35,16 @@ def j12(V):
 
 def j21(V):
     v1 = V[0]; v2 = V[1]
-    return I0/VT * np.exp((v1-v2)/VT)
+    return -I0/VT * np.exp((v1-v2)/VT)
 
 def j22(V):
     v1 = V[0]; v2 = V[1]
-    return -1/R3 - 1/R4 - I0/VT * np.exp((v1-v2)/VT)
+    return 1/R3 + 1/R4 + I0/VT * np.exp((v1-v2)/VT)
 
 # initial guesses
 v1 = 0
 v2 = 0
-
+iter = 0
 V = np.array( [v1,v2] )
 F = np.array( [ f1( V ) , f2( V ) ] )
 J = np.array( [ [ j11( V ) , j12( V ) ] , [ j21( V ) , j22( V )] ] )
@@ -54,10 +54,12 @@ err = np.abs(estimate - V)
 while ( err > tol ).any():
     F = np.array( [ f1(estimate) , f2(estimate) ] )
     J = np.array( [ [ j11(estimate) , j12(estimate) ] , [ j21(estimate) , j22(estimate) ] ] )
-    DV = np.linalg.solve(J , -F) # f(x)/f'(x)
-    new_estimate = estimate + DV
-    err = np.abs(new_estimate - estimate)
+    DV = np.linalg.solve(J , F) # f(x)/f'(x)
+    new_estimate = estimate - DV
+    err = np.max(np.abs(new_estimate - estimate))
     estimate = new_estimate
+    iter = iter + 1
+    print(estimate, iter)
 print("percentage error for ngspice V1:{:.6E}" .format((new_estimate[0] - 3.458168)/new_estimate[0]*100))
 print("percentage error for ngspice V2:{:.6E}" .format((new_estimate[1] - 2.812747)/new_estimate[1]*100))
 print("percentage error for LTspice V1:{:.6E}" .format((new_estimate[0] - 3.45802)/new_estimate[0]*100))
