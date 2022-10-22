@@ -145,19 +145,19 @@ I have managed to utilize the Jacobian matrix and Newton-Raphson iterative metho
 
 ![](circuit_test/Python/WB_circuit.png)
 
-The same circuit with same component values are then simulated in my code by performing the same DC OP analysis. Here, the non-linear analysis using Newton-Raphson was quite convoluted but I have managed to make it work. Since the code must be generic and not hard-coded, the way of doing this is by using the RHS and LHS matrices from before and adding the new diode stamp similar to how the other component stamps were added. However, the catch is that the MNA stamp addition section is also present in the Newton-Raphson algorithm. Most of these algorithms are derived from [Circuit analysis and Optimization](https://fides.fe.uni-lj.si/~zigar/CAO/lectures.php). 
+The same circuit with same component values are then simulated in my code by performing the same DC OP analysis. Here, the non-linear analysis using Newton-Raphson was quite convoluted but I have managed to make it work. Since the code must be generic and not hard-coded, the way of doing this is by using the RHS and LHS matrices from before and adding the new diode stamp similar to how the other component stamps were added. However, the catch is that the MNA stamp addition section is also present in the Newton-Raphson algorithm. Most of these algorithms are derived from the [5th Lecture of Circuit analysis and Optimization](https://fides.fe.uni-lj.si/~zigar/CAO/lectures.php). 
 
 Since the Newton-Raphson algorithm is derived from the equation below:
 
-//Picture of newton Raphson
+![](circuit_test/Python/NR_eqn.png)
 
 I have changed the way the solution's next iteration will be added which is similar to this equation. The linalg.solve function is used to solve the x in Ax=b since it also uses LU decomposition as intended evaluating sparse matrices. The RHS of the matrix is also added to the F_x matrix that follows the equation below:
 
-// Equation for RHS diode 
+![](circuit_test/Python/RHS_matrix_diode.png)
 
 The LHS matrix uses the diode stamp which have the following equation:
 
-// Equation for g_d
+![](circuit_test/Python/G_d_diode.png)
 
 By constantly updating the values of the voltages inside the matrix by adding LHS and RHS with their respective new matrices, the Newton-Raphson can then converge on a solution that is accurate. The tolerance in this was chosen to be 1e-9 for high accuracy. The comparison results between the simple_linear.py code and LTSpice wheatstone bridge simulation can be seen below:
 
