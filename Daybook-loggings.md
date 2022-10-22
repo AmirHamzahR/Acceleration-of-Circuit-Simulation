@@ -143,6 +143,35 @@ I have noticed that the expansion of the Jacobian matrix actually needs integrat
 
 I have managed to utilize the Jacobian matrix and Newton-Raphson iterative method for the non-linear part of the circuit. The circuit that was analysed is the Wheatstone bridge circuit. The arrangement of the circuit in LTSpice can be seen below:
 
+![](circuit_test/Python/WB_circuit.png)
+
+The same circuit with same component values are then simulated in my code by performing the same DC OP analysis. Here, the non-linear analysis using Newton-Raphson was quite convoluted but I have managed to make it work. Since the code must be generic and not hard-coded, the way of doing this is by using the RHS and LHS matrices from before and adding the new diode stamp similar to how the other component stamps were added. However, the catch is that the MNA stamp addition section is also present in the Newton-Raphson algorithm. 
+
+Since the Newton-Raphson algorithm is derived from the equation below:
+
+//Picture of newton Raphson
+
+I have changed the way the solution's next iteration will be added which is similar to this equation. The linalg.solve function is used to solve the x in Ax=b since it also uses LU decomposition as intended evaluating sparse matrices. The RHS of the matrix is also added to the F_x matrix that follows the equation below:
+
+// Equation for RHS diode 
+
+The LHS matrix uses the diode stamp which have the following equation:
+
+// Equation for g_d
+
+By constantly updating the values of the voltages inside the matrix by adding LHS and RHS with their respective new matrices, the Newton-Raphson can then converge on a solution that is accurate. The tolerance in this was chosen to be 1e-9 for high accuracy. The comparison results between the simple_linear.py code and LTSpice wheatstone bridge simulation can be seen below:
+
+simple_linear.py:
+
+![](circuit_test/Python/Nonlinear_result.png)
+
+LTSpice:
+
+![](circuit_test/Python/Nonlinear_test1.png)
+
+It can be seen that the values are really close to each other with only 0.3% to 0.6% error margin that makes it quite accurate. Now, the project focus can be shifted towards using the Newton-Raphson iteration algorithm to solve the dynamic elements to enable transient simulations.
+
+
 
 
 
