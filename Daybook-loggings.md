@@ -145,7 +145,7 @@ I have managed to utilize the Jacobian matrix and Newton-Raphson iterative metho
 
 ![](circuit_test/Python/WB_circuit.png)
 
-The same circuit with same component values are then simulated in my code by performing the same DC OP analysis. Here, the non-linear analysis using Newton-Raphson was quite convoluted but I have managed to make it work. Since the code must be generic and not hard-coded, the way of doing this is by using the RHS and LHS matrices from before and adding the new diode stamp similar to how the other component stamps were added. However, the catch is that the MNA stamp addition section is also present in the Newton-Raphson algorithm. 
+The same circuit with same component values are then simulated in my code by performing the same DC OP analysis. Here, the non-linear analysis using Newton-Raphson was quite convoluted but I have managed to make it work. Since the code must be generic and not hard-coded, the way of doing this is by using the RHS and LHS matrices from before and adding the new diode stamp similar to how the other component stamps were added. However, the catch is that the MNA stamp addition section is also present in the Newton-Raphson algorithm. Most of these algorithms are derived from [Circuit analysis and Optimization](https://fides.fe.uni-lj.si/~zigar/CAO/lectures.php). 
 
 Since the Newton-Raphson algorithm is derived from the equation below:
 
