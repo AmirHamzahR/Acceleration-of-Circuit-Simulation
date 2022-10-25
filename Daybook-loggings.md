@@ -171,6 +171,22 @@ LTSpice:
 
 It can be seen that the values are really close to each other with only 0.3% to 0.6% error margin that makes it quite accurate. Now, the project focus can be shifted towards using the Newton-Raphson iteration algorithm to solve the dynamic elements to enable transient simulations.
 
+# 24/10/2022
+
+To start the dynamic elements, there are three parts that will need to be covered. First is adding the pulse voltage source, second is adding the inductor stamp for RHS and LHS matrices, and lastly, adding the capacitor stamp. The equation of the pulse voltage source can be seen in the Tuma-Buermen Circuit Simulation book, which shows:
+
+#![](The equation)
+
+Which t_d is the time delay, f is the frequency, t is the time, Vo is the voltage offset and Va is the voltage amplitude. From this, a for loop and if else statements could be used to create the time response of the sine wave pulse voltage. The values are chosen to be the same as shown in the Tuma-Buermen Circuit Simulation book which are Vo = 1V, Va = 0.5V, f = 1kHz, td = 1ms, and theta = 400 s^-1. The graph of this simulation from the code is seen below:
+
+#![](Simulation graph)
+
+Which when compared with the simulation from the textbook is the same:
+
+#![](Textbook graph)
+
+From this, the new sine wave Vsource can be added to test the transient response of the capacitor and inductors in the RLC circuit. This will be done tomorrow by adding the capacitor and inductor stamps. Hopefully, the transient response can then be tested out from the python code.
+
 
 
 
