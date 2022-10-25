@@ -45,17 +45,73 @@ b = add_values(a,1,2)
 print(a)
 print(b)'''
 
+import time as tm
 import numpy as np
-def F(i):
-    x = np.zeros((len(i),1))
-    return x
-x = [5]
-lol = [
-    1,
-    1,
-    1,
-    1,
-    1
-]
+import scipy as sci
+from numpy.linalg import inv
+import matplotlib.pyplot as plt
 
-print(x)
+
+
+L = 1.5 	# Inductance value in Henry
+C = 0.0001 	# capacitance in F
+R = 100 		# resistance in Ohm, R is considered to be zero
+h = 0.001 	# time interval
+
+# Defining the Non-Linear Equations Function
+# x1 is the current variable, i, while x2 is the voltage variable, of the capacitor.
+
+
+# Defining the Time and Timestep for Transient Simulation
+t_start = 0
+t_end = 6e-3
+n = 5001
+h = (t_end - t_start) / (n-1)
+t = np.arange(t_start, t_end + h, h)
+
+# The variables for the sine wave voltage source
+X1 = np.ones((n,1))
+t_d = 1e-3
+f = 1e3
+theta = 400
+V_a = 0.5
+V_o = 1
+t1 = 0
+
+# get the start time
+st = tm.time()
+# Outer Time Loop
+
+for i in range (0, len(t)):
+    t1 = t1 + h
+    if(t1 < t_d):
+        V_t = V_o
+    else:
+        V_t = V_o + V_a*np.exp(-theta*(t1-t_d))*np.sin(2*np.pi*f*(t1-t_d))
+        
+    # Storing the final results at the given timestep
+    X1[i] = V_t
+	
+# Plotting the Graph
+
+# get the end time
+et = tm.time()
+
+plt.plot(t, X1, color = 'red', label = '$x_1$')
+plt.xlabel('Time ($s$)')
+plt.ylabel('Variables ($x_1$, $x_2$)')
+plt.title('Variation of the Variables ($x_1$, $x_2$) with Time\n' 
+			+ 'Timestep, $h$ = {}'.format(h))
+plt.legend()
+plt.grid(which='major')
+plt.minorticks_on()
+plt.grid(which='minor', alpha=0.2)
+
+
+
+
+# get the execution time
+elapsed_time = et - st
+print('Execution time:', elapsed_time, 'seconds')
+
+plt.show()

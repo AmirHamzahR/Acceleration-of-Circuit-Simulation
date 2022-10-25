@@ -66,5 +66,5 @@ print("percentage error for LTspice V1:{:.6E}" .format((new_estimate[0] - 3.4580
 print("percentage error for LTspice V2:{:.6E}" .format((new_estimate[1] - 2.81297)/new_estimate[1]*100))
 print("percentage error for ngspice D1:{:.6E}" .format(((new_estimate[0]-new_estimate[1]) - (3.458168 - 2.812747))/(new_estimate[0]-new_estimate[1])*100))
 print("percentage error for LTspice D1:{:.6E}" .format(((new_estimate[0]-new_estimate[1]) - (3.45802 - 2.81297))/(new_estimate[0]-new_estimate[1])*100))
-print("V1={:.4E}V\tV2={:.4E}V".format(*new_estimate))
+print("V1={}V\tV2={}V".format(*new_estimate))
 print("Voltage across forward biased diode: {:.4E}V".format(new_estimate[0]-new_estimate[1])) #0.645421

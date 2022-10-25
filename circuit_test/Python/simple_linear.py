@@ -86,12 +86,14 @@ def Diode_assigner(node1,node2,Is,VT,maxi,maxj):
         a[node2-1,node2-1] = x
     return a,v1,v2
 
-# A function that adds in voltage for the RHS based on MNA stamps
-def Vs_assigner(M,x):
+# A function that adds in voltage for the both LHS and RHS based on MNA stamps
+def Vs_assigner(M,x,G_mat, node2, node1):
     Value = np.array([[x]])
-    
+    # Extending the branch at the LHS matrix
+    G_mat1 = branch_ext(G_mat,node2,node1)
+    # Assigning the value at RHS
     a = np.concatenate((M, Value), axis=0)
-    return a
+    return a, G_mat1
 
 # A function that extends the matrix with the values needed for the LHS based on MNA stamps
 def branch_ext(M,node1,node2):
@@ -229,7 +231,7 @@ def Diode_system(LHS, RHS, node1, node2, Is, VT, maxi,maxj):
         
         delta = np.linalg.solve(J_x, np.matmul(J_x,v) - F_x)
         error = np.max(np.abs(delta))
-        v = v - delta
+        v = v- delta
         
         x = (Is/VT)*(np.exp((v[node1-1]-v[node2-1])/VT))
         
@@ -301,11 +303,6 @@ I_stamp = [
 # Adding the current values from the stamp to create the overall RHS matrix 
 T_RHS = mat_sum(I_stamp)
 
-#Adding the voltage source values
-RHS = Vs_assigner(T_RHS,Vs[0])
-
-print(RHS)
-
 R_stamp = [
     R_assigner(1,3,cond(R[0]),Maxi,Maxj),
     R_assigner(1,0,cond(R[1]),Maxi,Maxj),
@@ -314,12 +311,15 @@ R_stamp = [
 ]
 
 # Adding the resistor values from the stamp to create the overall RHS matrix
-T_R = mat_sum(R_stamp)
+T_LHS = mat_sum(R_stamp)
 
-# Adding the branch values from different stamp sources (eg. Voltage source, VCCS)
-LHS = branch_ext(T_R,0,3)
-print(LHS)
+# Adding the branch values from different stamp sources (eg. Voltage source, VCCS) which affects both LHS and RHS
 
+# Adding the voltage source
+RHS, G_mat = Vs_assigner(T_RHS, Vs[0], T_LHS, 0, 3)
+
+print(G_mat)
+print(RHS)
 # Create the function matrices of the variables that are going to be used
 # new_LHS = np.dot(LHS, X(LHS))
 
@@ -333,7 +333,8 @@ print(LHS)
 #et1 = time.time()
 
 st2 = tm.time()
-ans = Diode_system(LHS, RHS, 1, 2, Is, VT, Maxi, Maxj)
+# The function that would calculate the G_matrix and RHS of the diode using Newton-Raphson 
+ans = Diode_system(G_mat, RHS, 1, 2, Is, VT, Maxi, Maxj)
 # get the end time
 et2 = tm.time()
 

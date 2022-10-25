@@ -54,7 +54,7 @@ x3 = 0
 # Defining the Time and Timestep for Transient Simulation
 t_start = 0
 t_end = 10 * 0.05
-n = 50001
+n = 5000
 h = (t_end - t_start) / (n-1)
 t = np.arange(t_start, t_end + h, h)
 
