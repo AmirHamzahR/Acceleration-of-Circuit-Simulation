@@ -175,15 +175,15 @@ It can be seen that the values are really close to each other with only 0.3% to 
 
 To start the dynamic elements, there are three parts that will need to be covered. First is adding the pulse voltage source, second is adding the inductor stamp for RHS and LHS matrices, and lastly, adding the capacitor stamp. The equation of the pulse voltage source can be seen in the Tuma-Buermen Circuit Simulation book, which shows:
 
-#![](The equation)
+#![](circuit_test/Python/V_sinesource.png)
 
 Which t_d is the time delay, f is the frequency, t is the time, Vo is the voltage offset and Va is the voltage amplitude. From this, a for loop and if else statements could be used to create the time response of the sine wave pulse voltage. The values are chosen to be the same as shown in the Tuma-Buermen Circuit Simulation book which are Vo = 1V, Va = 0.5V, f = 1kHz, td = 1ms, and theta = 400 s^-1. The graph of this simulation from the code is seen below:
 
-#![](Simulation graph)
+#![](circuit_test/Python/SineVsource_codegraph.png)
 
 Which when compared with the simulation from the textbook is the same:
 
-#![](Textbook graph)
+#![](circuit_test/Python/Textbook_sinewavetest.png)
 
 From this, the new sine wave Vsource can be added to test the transient response of the capacitor and inductors in the RLC circuit. This will be done tomorrow by adding the capacitor and inductor stamps. Hopefully, the transient response can then be tested out from the python code.
 
