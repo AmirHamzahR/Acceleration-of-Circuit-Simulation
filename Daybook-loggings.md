@@ -175,19 +175,61 @@ It can be seen that the values are really close to each other with only 0.3% to 
 
 To start the dynamic elements, there are three parts that will need to be covered. First is adding the pulse voltage source, second is adding the inductor stamp for RHS and LHS matrices, and lastly, adding the capacitor stamp. The equation of the pulse voltage source can be seen in the Tuma-Buermen Circuit Simulation book, which shows:
 
-#![](circuit_test/Python/V_sinesource.png)
+![](circuit_test/Python/V_sinesource.png)
 
 Which t_d is the time delay, f is the frequency, t is the time, Vo is the voltage offset and Va is the voltage amplitude. From this, a for loop and if else statements could be used to create the time response of the sine wave pulse voltage. The values are chosen to be the same as shown in the Tuma-Buermen Circuit Simulation book which are Vo = 1V, Va = 0.5V, f = 1kHz, td = 1ms, and theta = 400 s^-1. The graph of this simulation from the code is seen below:
 
-#![](circuit_test/Python/SineVsource_codegraph.png)
+![](circuit_test/Python/SineVsource_codegraph.png)
 
 Which when compared with the simulation from the textbook is the same:
 
-#![](circuit_test/Python/Textbook_sinewavetest.png)
+![](circuit_test/Python/Textbook_sinewavetest.png)
 
 From this, the new sine wave Vsource can be added to test the transient response of the capacitor and inductors in the RLC circuit. This will be done tomorrow by adding the capacitor and inductor stamps. Hopefully, the transient response can then be tested out from the python code.
 
+## 26/10/2022
 
+Dr. Danial gave further improving comments regarding my coding style and naming conventions for the variables. Some of the variables' names have been changed as to be more in tune with the mathematical and circuit theories. One of the more noticeable changes were made for the naming of the node1 and node2 which is actually the x-th node and y-th node of the circuit. I have then changed the names to nodex and nodey as it fits more which also reduces some confusion regarding this.
+
+Since non-linear diodes can now be simulated for DC OP analysis, the focus should now be on trying to make the transient work. The sine wave source can already be simulated but a voltage pulse would be an even better way of simulating as it solves more circuit problems compared to the sine wave. I am now going to understand the pulse voltage even further for it to be coded and simulated using Python.
+
+## 29/10/2022
+
+I have already succeeded in simulating a pulse voltage for the circuit. This is by using the mathematical equation of the waveform which is described to be,
+
+![](png)
+
+From here, I have translated these formulas into code that uses if else for the condition of the time while having the user to input all the variables for the code. I have successfully generated a voltage pulse that follows the book which is shown below.
+
+![](mypulse)
+Voltage pulse from Python
+
+![](book)
+Voltage pulse from the textbook
+
+As seen from the voltage pulse, both are the same with each other as the input variables for the pulse voltage are the same. I stumbled accross an error when trying to make the pulse voltage which the loop stops as soon as it reaches the time period. This was then solved by setting the time in the voltage code to be the initial time so that it loops again. By doing this, I used -td as the initial time since it will loop back to the original time where the loop begins again. Following my for loop for the transient, the loop would stop at the end of the time set by the user. This will then plot the graph that takes in the nodal voltages or current that the user wants to be shown. 
+
+The next target is trying to add this pulsed voltage source into the usual MNA resistive network stamps that I have made.
+
+## 31/20/2022
+
+The pulse voltage source can now be added into the main code. This is by replacing the normal DC voltage source in the RHS with the pulsed voltage source that has been made in the tests.py code. I have used the same code while adding a few changes in the for loop which constantly updates the new value of the pulse voltage for the graph to plot the nodal voltages values when checking each one of them. 
+
+I have chosen the circuit below to test if my code works with high accuracy for the transient response of resistive networks.
+
+![](picofcircuit)
+
+Gratefully, the execution of the code went exactly as I have planned and it can now simulate a transient response of resistive networks that contains a pulsed voltage source. However, the limitation of my coding style is that it can only add one pulse voltage source but adding more resistors and diode in the circuit would still be possible. I have made a comparison analysis of my simulation for the resistive network using LTSpice to see how accurate it is.
+
+![](picLTSpice)
+
+LTSpice transient resistive network simulation
+
+![](picPythonTrans)
+
+Python transient resistive network simulation
+
+From this, the analysis are both the same which means that I could expand my circuit into accepting capacitors and inductors to check their transient response using my Python code.
 
 
 
