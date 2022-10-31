@@ -197,14 +197,14 @@ Since non-linear diodes can now be simulated for DC OP analysis, the focus shoul
 
 I have already succeeded in simulating a pulse voltage for the circuit. This is by using the mathematical equation of the waveform which is described to be,
 
-![](png)
+![](circuit_test/Python/Pulse_eqn.png)
 
-From here, I have translated these formulas into code that uses if else for the condition of the time while having the user to input all the variables for the code. I have successfully generated a voltage pulse that follows the book which is shown below.
+From here, I have translated these formulas into code that uses if else for the condition of the time while having the user to input all the variables for the code. I have successfully generated a voltage pulse that follows the book which is shown below. I have used Vinitial = 0V, Von = 1, Time delay = 1e-3s, Rise time = 0.5e-3s, Fall time = 0.2e-3s, On time = 2e-3s, and Time period = 4e-3 s for the variables. The stop time is 6e-3s.
 
-![](mypulse)
+![](circuit_test/Python/pulse_python.png)
 Voltage pulse from Python
 
-![](book)
+![](circuit_test/Python/pulse_textbook.png)
 Voltage pulse from the textbook
 
 As seen from the voltage pulse, both are the same with each other as the input variables for the pulse voltage are the same. I stumbled accross an error when trying to make the pulse voltage which the loop stops as soon as it reaches the time period. This was then solved by setting the time in the voltage code to be the initial time so that it loops again. By doing this, I used -td as the initial time since it will loop back to the original time where the loop begins again. Following my for loop for the transient, the loop would stop at the end of the time set by the user. This will then plot the graph that takes in the nodal voltages or current that the user wants to be shown. 
@@ -217,15 +217,15 @@ The pulse voltage source can now be added into the main code. This is by replaci
 
 I have chosen the circuit below to test if my code works with high accuracy for the transient response of resistive networks.
 
-![](picofcircuit)
+![](circuit_test/Python/Transient_resistivecircuit.png)
 
-Gratefully, the execution of the code went exactly as I have planned and it can now simulate a transient response of resistive networks that contains a pulsed voltage source. However, the limitation of my coding style is that it can only add one pulse voltage source but adding more resistors and diode in the circuit would still be possible. I have made a comparison analysis of my simulation for the resistive network using LTSpice to see how accurate it is.
+Gratefully, the execution of the code went exactly as I have planned and it can now simulate a transient response of resistive networks that contains a pulsed voltage source. However, the limitation of my coding style is that it can only add one pulse voltage source but adding more resistors and diode in the circuit would still be possible. I have made a comparison analysis of my simulation for the resistive network using LTSpice to see how accurate it is. I have used Vinitial = 0V, Von = 1, Time delay = 1e-3s, Rise time = 0.5e-3s, Fall time = 0.2e-3s, On time = 2e-3s, and Time period = 4e-3 s for the variables. The stop time is now 12e-3s for better analysis.
 
-![](picLTSpice)
+![](circuit_test/Python/LT_transientresistive.png)
 
 LTSpice transient resistive network simulation
 
-![](picPythonTrans)
+![](circuit_test/Python/Transient_resistivenetwork.png)
 
 Python transient resistive network simulation
 
