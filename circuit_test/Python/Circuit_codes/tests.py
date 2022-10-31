@@ -74,7 +74,7 @@ V_o = 1
 # The variables for the pulse wave voltage source
 V1 = 0
 V2 = 1
-td = 0
+td = 1e-3
 tr = 0.5e-3
 tf = 0.2e-3
 tpw = 2e-3
@@ -113,7 +113,7 @@ def V_pulse(V1,V2,t1,td,tr,tf,tpw,tper):
 # Defining the Time and Timestep for Transient Simulation
 X1 = np.ones((n,1))
 t_start = 0
-t_end = 12e-3
+t_end = 6e-3
 t1 = 0
 h = (t_end - t_start) / (n-1)
 t = np.arange(t_start, t_end + h, h)
