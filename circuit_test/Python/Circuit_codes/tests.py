@@ -80,6 +80,14 @@ tf = 0.2e-3
 tpw = 2e-3
 tper = 4e-3
 
+LHS = np.array([[0.000001, 0, 1],
+        [0, 1, 0],
+        [ 1, 0, 0]])
+
+RHS = np.array([[0],
+               [0],
+               [1]])
+print(np.linalg.solve(LHS,RHS))
 
 # Outer Time Loop
 

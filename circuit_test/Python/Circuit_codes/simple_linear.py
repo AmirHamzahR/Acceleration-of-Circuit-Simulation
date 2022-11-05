@@ -10,10 +10,19 @@ import time as tm
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Function for the iterations of a set of unknowns that we are trying to solve
-def X(i):
-    x = np.zeros((len(i),1))
-    return x
+# The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
+n = 5001 #5001 seems to be the sweet spot
+
+# Choosing the pulse wave for the transient simulation
+simul = 1
+
+# Defining the Time and Timestep for Transient Simulation
+X1 = np.ones((n,1))
+t_start = 0
+t_end = 12e-2
+t1 = 0
+h = (t_end - t_start) / (n-1)
+t = np.arange(t_start, t_end + h, h)
 
 # Doing the sine wave analysis
 def V_sine(V_o,V_a,t_d,theta,f,t1):
@@ -26,7 +35,7 @@ def V_sine(V_o,V_a,t_d,theta,f,t1):
 
 # Doing the pulse wave analysis
 def V_pulse(V1,V2,t1,td,tr,tf,tpw,tper):
-    V_t1 = 0
+    V_t1 = V1
     if(t1 >= 0 and t1 < td):
         V_t1 = V1
     elif(t1 >= td and t1 < (td + tr)):
@@ -40,18 +49,6 @@ def V_pulse(V1,V2,t1,td,tr,tf,tpw,tper):
     else:
         t1 = td
     return V_t1, t1
-
-# The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
-n = 5001
-
-# Defining the Time and Timestep for Transient Simulation
-X1 = np.ones((n,1))
-t_start = 0
-t_end = 12e-3
-t1 = 0
-h = (t_end - t_start) / (n-1)
-t = np.arange(t_start, t_end + h, h)
-simul = 4
 
 # Functions that defines the different stamps for the resistor, voltage source, and current source
 def cond(R):
@@ -78,53 +75,135 @@ def mat_sum(list_of_mat):
     return a
 
 # A function that initiliaze the current sources value and input into the RHS matrices based on MNA stamps
-def Is_assigner(node_x,node_y,x,maxi,maxj):
+def Is_assigner(node_x,node_y,I,maxi,maxj):
     maxj = 1
     a = matrix(maxi,maxj)
     if(node_x == 0):
-        a[node_y-1][0] = x
+        a[node_y-1][0] = I
     elif(node_y == 0):
-        a[node_x-1][0] = -x
+        a[node_x-1][0] = I
     else:
-        a[node_x-1][maxj-1] = x
-        a[node_y-1][maxj-1] = -x
+        a[node_x-1][maxj-1] = -I
+        a[node_y-1][maxj-1] = I
     return a
 
 # A function that initiliaze the resistor values and input into the LHS matrices based on MNA stamps
-def R_assigner(node_x,node_y,x,maxi,maxj):
+def R_assigner(node_x,node_y,R,maxi,maxj):
     a = matrix(maxi,maxj)
     if(node_x == 0):
-        a[node_y-1,node_y-1] = x
+        a[node_y-1,node_y-1] = R
     elif(node_y == 0):
-        a[node_x-1,node_x-1] = x
+        a[node_x-1,node_x-1] = R
     else:
-        a[node_x-1,node_x-1] = x
-        a[node_x-1,node_y-1] = -x
-        a[node_y-1,node_x-1] = -x
-        a[node_y-1,node_y-1] = x
+        a[node_x-1,node_x-1] = R
+        a[node_x-1,node_y-1] = -R
+        a[node_y-1,node_x-1] = -R
+        a[node_y-1,node_y-1] = R
     return a
 
-def Diode_assigner(node_x,node_y,Is,VT,maxi,maxj):
-    v1 = 0
-    v2 = 0
-    x = Is*(np.exp((v1-v2)/VT)-1)
-    a = matrix(maxi,maxj)
+def C_assigner(node_x,node_y,C,LHS,RHS,init,h):
+    # this if else statment uses trapezoidal formula
+    size_LHS = np.shape(LHS)
+    x = C/h
     if(node_x == 0):
-        a[node_y-1,node_y-1] = x
+        x1 = C*init[node_y-1]/h
     elif(node_y == 0):
-        a[node_x-1,node_x-1] = x
+        x1 = C*init[node_x-1]/h
     else:
-        a[node_x-1,node_x-1] = x
-        a[node_x-1,node_y-1] = -x
-        a[node_y-1,node_x-1] = -x
-        a[node_y-1,node_y-1] = x
-    return a,v1,v2
+        x1 = C*(init[node_x-1]-init[node_y-1])/h
+    
+    # Matrix stamp for a capacitor on RHS
+    a = Is_assigner(node_x,node_y,x1,size_LHS[0],size_LHS[1])
+    # Matrix stamp for a capacitor on LHS
+    b = R_assigner(node_x,node_y,x,size_LHS[0],size_LHS[1]) 
+    New_LHS = LHS + b
+    New_RHS = RHS + a
+    
+    return New_LHS, New_RHS
+
+def Capacitor_system(C,RHS,LHS,h,init):
+    """
+    Solve nonlinear system F=0 by Newton's method.
+    J is the Jacobian of F. Both F and J must be functions of x.
+    At input, x holds the start value. The iteration continues
+    until ||F|| < eps.
+    """
+    eps = 1e-8
+    error = 9e9
+    iteration_counter = 0
+    solution = init
+        
+    LHS, RHS = C_assigner(2,0,C[0],LHS,RHS,init,h)
+    LHS, RHS = C_assigner(3,0,C[1],LHS,RHS,init,h)
+    
+    while error > eps and iteration_counter < 5000:
+        
+        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
+        error = np.max(np.abs(delta))
+        solution -= delta
+        
+        iteration_counter += 1
+
+    return solution
+    
+def Diode_assigner(node_x,node_y,Is,VT,LHS,RHS,solution):
+    size_LHS = np.shape(LHS)
+    x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT))
+    
+    x1 = x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1)
+    
+    b = Is_assigner(node_x,node_y,-x1,size_LHS[0],size_LHS[1])
+    
+    if(node_x == 0):
+        x = (Is/VT)*(np.exp((solution[node_y-1])/VT))
+        x1 = x*(solution[node_y-1])-Is*(np.exp((solution[node_y-1])/VT)-1)
+    elif(node_y == 0):
+        x = (Is/VT)*(np.exp((solution[node_x-1])/VT))
+        x1 = x*(solution[node_x-1])-Is*(np.exp((solution[node_x-1])/VT)-1)
+    else:
+        x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT))
+        x1 = x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1)
+        
+    # Matrix stamp for a capacitor on RHS
+    a = Is_assigner(node_x,node_y,-x1,size_LHS[0],size_LHS[1])
+    # Matrix stamp for a capacitor on LHS
+    b = R_assigner(node_x,node_y,x,size_LHS[0],size_LHS[1]) 
+    
+    New_LHS = LHS + b
+    New_RHS = RHS + a
+    
+    return New_LHS, New_RHS
+
+def Diode_system(LHS, RHS):
+    """
+    Solve nonlinear system F=0 by Newton's method.
+    J is the Jacobian of F. Both F and J must be functions of x.
+    At input, x holds the start value. The iteration continues
+    until ||F|| < eps.
+    """
+    eps = 1e-9
+    error = 9e9
+    iteration_counter = 0
+    size_LHS = np.shape(LHS)
+    solution = np.ones((size_LHS[0],1))
+    
+    LHS, RHS = Diode_assigner(2,0,Is,VT,LHS,RHS,solution)
+    
+    while error > eps and iteration_counter < 5000:
+        
+        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
+        error = np.max(np.abs(delta))
+        solution -= delta
+        
+        iteration_counter += 1
+        
+    return solution
 
 # A function that adds in voltage for the both LHS and RHS based on MNA stamps
-def Vs_assigner(RHS,V_value,G_mat, node_y, node_x):
+def Vs_assigner(V_value, node_x, node_y, LHS, RHS):
     Value = np.array([[V_value]])
     # Extending the branch at the LHS matrix
-    New_LHS = branch_ext(G_mat,node_y,node_x)
+    New_LHS = branch_ext(LHS,node_y,node_x)
     # Assigning the value at RHS
     New_RHS = np.concatenate((RHS, Value), axis=0)
     size_RHS = np.shape(New_RHS)
@@ -154,7 +233,6 @@ def branch_ext(M,node_x,node_y):
     
     return M2
     
-
 def plu(A):
     
     #number of rows
@@ -224,81 +302,6 @@ def back_substitution(U, y):
         
     return x
 
-def Diode_system(LHS, RHS, node_x, node_y, Is, VT, maxi,maxj):
-    """
-    Solve nonlinear system F=0 by Newton's method.
-    J is the Jacobian of F. Both F and J must be functions of x.
-    At input, x holds the start value. The iteration continues
-    until ||F|| < eps.
-    """
-    eps = 1e-9
-    error = 9e9
-    iteration_counter = 0
-    v = np.ones((maxi+1,1))
-    
-    x = (Is/VT)*(np.exp((v[node_x-1]-v[node_y-1])/VT))
-    
-    x1 = x*(v[node_x-1]-v[node_y-1])-Is*(np.exp((v[node_x-1]-v[node_y-1])/VT)-1)
-    
-    b = matrix(maxi+1,1)
-    if(node_x == 0):
-        b[node_y-1][0] = x1
-    elif(node_y == 0):
-        b[node_x-1][0] = -x1
-    else:
-        b[node_x-1][0] = x1
-        b[node_y-1][0] = -x1
-    G_x = RHS + b
-
-    a = matrix(maxi+1,maxj+1)
-    if(node_x == 0):
-        a[node_y-1,node_y-1] = x
-    elif(node_y == 0):
-        a[node_x-1,node_x-1] = x
-    else:
-        a[node_x-1,node_x-1] = x
-        a[node_x-1,node_y-1] = -x
-        a[node_y-1,node_x-1] = -x
-        a[node_y-1,node_y-1] = x
-    J_x = LHS + a
-    
-    while error > eps and iteration_counter < 5000:
-        
-        delta = np.linalg.solve(J_x, np.matmul(J_x,v) - G_x)
-        error = np.max(np.abs(delta))
-        v = v - delta
-        
-        x = (Is/VT)*(np.exp((v[node_x-1]-v[node_y-1])/VT))
-        
-        x1 = x*(v[node_x-1]-v[node_y-1])-Is*(np.exp((v[node_x-1]-v[node_y-1])/VT)-1)
-        if(node_x == 0):
-            b[node_y-1][0] = x1
-        elif(node_y == 0):
-            b[node_x-1][0] = -x1
-        else:
-            b[node_x-1][0] = x1
-            b[node_y-1][0] = -x1
-        G_x = RHS + b
-        
-        if(node_x == 0):
-            a[node_y-1,node_y-1] = x
-        elif(node_y == 0):
-            a[node_x-1,node_x-1] = x
-        else:
-            a[node_x-1,node_x-1] = x
-            a[node_x-1,node_y-1] = -x
-            a[node_y-1,node_x-1] = -x
-            a[node_y-1,node_y-1] = x
-        J_x = LHS + a
-        iteration_counter += 1
-        
-
-    # Here, either a solution is found, or too many iterations
-    if error > eps:
-        iteration_counter = -1
-    return v, J_x, G_x
-
-
 def plu_solve(A, b):
     
     P, L, U = plu(A)
@@ -314,20 +317,11 @@ theta = 400
 V_a = 0.5
 V_o = 1
 
-# The variables for the pulse wave voltage source
-V1 = 0
-V2 = 1
-t1 = 0
-td = 1e-3
-tr = 0.5e-3
-tf = 0.2e-3
-tpw = 2e-3
-tper = 4e-3
-
 #Values of the variables
 Is = 3e-9 # A
 VT = 0.05 # V
-V1, temp = V_pulse(V1,V2,t1,td,tr,tf,tpw,tper)
+# Initial voltage before turning on:
+V1 = 2
 Vs = [
     V1
 ]
@@ -336,8 +330,12 @@ I = [
     0
 ]
 
+C = [
+    0.4e-6,0.8e-6
+]
+
 R = [
-    2e3,3e3,4e3,2e3,1e3
+    3e3,1e3
 ]
 
 # total number of nodes and voltage sources that is contained to build the base matrix 
@@ -348,83 +346,58 @@ T_nodes = 3
 Maxi = T_nodes
 Maxj = Maxi
 
-
 # Resistor values in a similar format of SPICE simulators's netlist
 I_stamp = [
-    Is_assigner(0,0,I[0],Maxi,Maxj)
+    # default state (for RHS) - Is_assigner(0,0,I[0],Maxi,Maxj)
+    Is_assigner(0,0,0,Maxi,Maxj)
 ]
-# Adding the current values from the stamp to create the overall RHS matrix 
-T_RHS = mat_sum(I_stamp)
 
+# Adding the current values from the stamp to create the overall RHS matrix 
+RHS = mat_sum(I_stamp)
 R_stamp = [
-    R_assigner(1,2,cond(R[0]),Maxi,Maxj),
-    R_assigner(2,0,cond(R[1]),Maxi,Maxj),
-    R_assigner(2,3,cond(R[2]),Maxi,Maxj),
-    R_assigner(3,0,cond(R[3]),Maxi,Maxj),
-    R_assigner(3,0,cond(R[4]),Maxi,Maxj)
+    # default state (for LHS) - R_assigner(0,0,0,Maxi,Maxj)
+    R_assigner(2,1,cond(R[0]),Maxi,Maxj),
+    R_assigner(3,2,cond(R[1]),Maxi,Maxj)
 ]
 
 # Adding the resistor values from the stamp to create the overall RHS matrix
-T_LHS = mat_sum(R_stamp)
+LHS = mat_sum(R_stamp)
 
 # Adding the branch values from different stamp sources (eg. Voltage source, VCCS) which affects both LHS and RHS
+RHS, LHS, Vs_locate = Vs_assigner(Vs[0], 1, 0, LHS, RHS)
 
-
-# Adding the voltage source
-RHS, G_mat, column_val = Vs_assigner(T_RHS, Vs[0], T_LHS, 0, 1)
-
-print(G_mat)
-print(RHS)
-print(column_val)
-# Create the function matrices of the variables that are going to be used
-# new_LHS = np.dot(LHS, X(LHS))
-
-
-# A function that could analyse and use the stamps to create an MNA circuit matrix
-# get the start time
-#st1 = time.time()
-# Solving the MNA matrix by using linear solvers in python
-#ans1 = np.linalg.solve(LHS,RHS)
-# get the end time
-#et1 = time.time()
-
-
-
-# st2 = tm.time()
-# The function that would calculate the G_matrix and RHS of the diode using Newton-Raphson 
-# temp, J_x, G_x = Diode_system(G_mat, RHS, 1, 2, Is, VT, Maxi, Maxj)
-# ans, J_x, G_x = Diode_system(J_x, G_x, 1, 3, Is, VT, Maxi, Maxj)
-# get the end time
-# et2 = tm.time()
-
-simul = 1
+# OP analysis for the initial conditions for the transient simulation
+init = np.linalg.solve(LHS,RHS)
 
 volt1 = np.ones((n,1))
 volt2 = np.ones((n,1))
 volt3 = np.ones((n,1))
 current = np.ones((n,1))
+
 # get the start time
 st = tm.time()
 match simul:
     # 1 does the pulse wave voltage source
     case 1:
         for i in range (0, len(t)):
+            
+            # The functions and variables needed for the pulse wave voltage source
             t1 = t1 + h
-            V_t, t1 = V_pulse(V1,V2,t1,td,tr,tf,tpw,tper)
+            V_t, t1 = V_pulse(V1 = V1,V2 = 6,t1 = t1,td = 1e-3,tr = 0.5e-3,tf = 0.2e-3,tpw = 2e-3,tper = 4e-3)
             v_value = np.array([[V_t]])
-            RHS[column_val-1,0] = v_value
-            x_solution = np.linalg.solve(G_mat,RHS)
-            # RHS = RHS + Vs_assigner(+)
+            RHS[Vs_locate-1,0] = v_value
+            
+            # Using Newton-Raphson and backward euler stamp to simulate the capacitors in the circuit
+            ans = Capacitor_system(C,RHS,LHS,h,init)
+            x_solution = ans
             
             # Storing the final results at the given timestep
             volt1[i] = x_solution[0]
             volt2[i] = x_solution[1]
             volt3[i] = x_solution[2]
             current[i] = x_solution[3]
-        
-            # get the end time     
-        et = tm.time()   
-    
+            
+        et = tm.time()
         # Plotting the Graph
         
         plt.plot(t, volt1, color = 'red', label = '$nodal voltage 1$')
@@ -438,6 +411,8 @@ match simul:
         plt.grid(which='major')
         plt.minorticks_on()
         plt.grid(which='minor', alpha=0.2)
+        # get the end time     
+           
     
     # 2 does the sine wave voltage source
     case 2:
@@ -461,16 +436,9 @@ match simul:
         plt.grid(which='minor', alpha=0.2)
     case _:
         print("Doing the OP analysis")
-        print(np.linalg.solve(G_mat,RHS))
+        print(np.linalg.solve(LHS,RHS))
         et = tm.time() 
 
-
-#print(ans1)
-# print(ans)
-# print(ans[1]-ans[0])
-
-# get the execution time
-# elapsed_time1 = et1 - st1
 elapsed_time2 = et - st
 print('Execution time:', elapsed_time2, 'seconds')
 
