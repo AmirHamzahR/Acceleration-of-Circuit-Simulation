@@ -235,12 +235,11 @@ From this, the analysis are both the same which means that I could expand my cir
 
 There are two ways of adding the capacitors into the circuit matrix. One is by using the Backward Euler method and the other is by using trapezoidal integration. The backward euler method does not include the current of the capacitor while the trapezoidal integration does include the current of the capacitor. The MNA stamp for backward euler method is shown below,
 
-![](backwardeuler.png)
+![](circuit_test/Python/BackwardEuler_C.png)
 
 While the MNA stamp and equation for the trapezoidal integration of the capacitor is shown below,
 
-![](MNA including current)
-![](trapezoidal equation)
+![](circuit_test/Python/trapezoidal_C.png)
 
 For simplicity sake, the focus is only on adding the reactive component of the capacitor in the circuit so only the normal backward euler method is used. This means that the LHS have similar stamp with the resistor stamp while the RHS of the capacitor is similar to the current's stamp. In terms of coding, the function R_assigner and Is_assigner could be used for the LHS and RHS matrix stamp of the capacitors respectively.
 
