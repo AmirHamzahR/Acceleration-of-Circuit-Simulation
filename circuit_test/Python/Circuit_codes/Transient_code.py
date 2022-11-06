@@ -1,9 +1,10 @@
 """
-This code section will try to generate MNA matrices for simple linear circuit and solve them
-using the linear solver in Python.
+This code section can now generate a transient simulation by performing OP analysis which is used for the initial conditions.
+The initial conditions is then transferred into the Newton-Raphson solver which solves for the nodal voltages, currents, and
+variables that are needed for the transient simulation.
 Expansions:
-1) Try to use LU decomposition to solve the circuit
-2) Increase the size of the circuit
+1) Try adding more components such as inductors, VCCS, and increase circuit size
+2) Incorporate with C++ to be used for acceleration
 """
 
 import time as tm
@@ -310,16 +311,7 @@ def plu_solve(A, b):
     
     return back_substitution(U, y)
 
-# The variables for the sine wave voltage source
-t_d = 1e-3
-f = 1e3
-theta = 400
-V_a = 0.5
-V_o = 1
-
-#Values of the variables
-Is = 3e-9 # A
-VT = 0.05 # V
+# Values of the variables
 # Initial voltage before turning on:
 V1 = 2
 Vs = [
