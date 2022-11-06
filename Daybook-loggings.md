@@ -211,7 +211,7 @@ As seen from the voltage pulse, both are the same with each other as the input v
 
 The next target is trying to add this pulsed voltage source into the usual MNA resistive network stamps that I have made.
 
-## 31/20/2022
+## 31/10/2022
 
 The pulse voltage source can now be added into the main code. This is by replacing the normal DC voltage source in the RHS with the pulsed voltage source that has been made in the tests.py code. I have used the same code while adding a few changes in the for loop which constantly updates the new value of the pulse voltage for the graph to plot the nodal voltages values when checking each one of them. 
 
@@ -231,5 +231,73 @@ Python transient resistive network simulation
 
 From this, the analysis are both the same which means that I could expand my circuit into accepting capacitors and inductors to check their transient response using my Python code.
 
+## 2/11/2022
 
+There are two ways of adding the capacitors into the circuit matrix. One is by using the Backward Euler method and the other is by using trapezoidal integration. The backward euler method does not include the current of the capacitor while the trapezoidal integration does include the current of the capacitor. The MNA stamp for backward euler method is shown below,
 
+![](backwardeuler.png)
+
+While the MNA stamp and equation for the trapezoidal integration of the capacitor is shown below,
+
+![](MNA including current)
+![](trapezoidal equation)
+
+For simplicity sake, the focus is only on adding the reactive component of the capacitor in the circuit so only the normal backward euler method is used. This means that the LHS have similar stamp with the resistor stamp while the RHS of the capacitor is similar to the current's stamp. In terms of coding, the function R_assigner and Is_assigner could be used for the LHS and RHS matrix stamp of the capacitors respectively.
+
+Since the backward euler method is a non-linear equation and uses the value of the previous capacitor voltage for the nodal voltages to be solved, this means that Newton-Raphson method will be used to solve and integrate the capacitor into the circuit matrix.
+
+This is done by creating an RC circuit to see the RC response graph plotted by having the same conditions in the code and LTSpice. The circuit that is going to be studied is shown on the figure below.
+
+![](circuit_test/Python/RC_responsecircuit.png)
+
+A few simulations have been made and the graph seems to be almost the same but a bit different. The pulse voltage that is being used is the same as before with the resistor R1 being 1kΩ and the capacitor's value is changed depending on the simulation of the RC response. A comparison between the python code's simulation and LTSpice's simulation can be made on different capacitances.
+
+![](circuit_test/Python/100e-6.png)
+
+Python code with C = 100e-6F
+
+![](circuit_test/Python/LT100e-6.png)
+
+LTSpice simulation with C = 100e-6F
+
+![](circuit_test/Python/100e-8.png)
+
+Python code with C = 100e-8F
+
+![](circuit_test/Python/LT100e-8.png)
+
+LTSpice simulation with C = 100e-8F
+
+![](circuit_test/Python/100e-10.png)
+
+Python code with C = 100e-10F
+
+![](circuit_test/Python/LT100e-10.png)
+
+LTSpice simulation with C = 100e-10F
+
+As it can be seen, the 2nd nodal voltage plot from the Python code is opposite compared to LTSPice on large capacitances but then have the same plot with smaller capacitances. I suspect that the lack of timestep control might be the fatal error in this simulations. From the [Circuit simulation with Spice Opus](https://books.google.co.uk/books?id=43RNRknMvlgC&amp;printsec=frontcover&amp;redir_esc=y#v=onepage&amp;q&amp;f=false) textbook, convergence error is normal when using Newton-Raphson to solve the matrices. So, a convergence control for the timestep have been added if the Newton-Raphson exceeds 5 loops, the timestep, h, will be divided by 10. However, this seems to still not solve the error so there might be something else that is wrong in the code. Further debugging will be done on the code to check if everything is working properly.
+
+## 4/11/2022
+
+I have noticed that in order to run a proper transient simulation, the OP analysis is an important factor to focus on rather than the timestep control. Surprisingly, my code did not properly establish the OP analysis as the initial condition for the transient simulation. After making some debuggings, I have then added the OP analysis of the linear resistive networks in the circuit matrices as the initial condition for my transient simulation. The simulation then ran properly as intended which is similar to the LTSPice transient simulation.
+
+Upon achieving this successful results, I have decided to add make the code more modular to add in more capacitors in the Newton-Raphson solver. This had enable me to simulate bigger circuits as more components can now be added into the circuit matrices. The circuit used as the next test on the new code is shown below.
+
+![](circuit_test/Python/LT_transientdynamic.png)
+
+Dynamic RC circuit
+
+I have also changed the Von and Voff to be 6V and 2V respectively just to ensure that changing the variables is foolproof. Gratefully, the code could run perfectly which shows the transient graph of nodal voltage 1, nodal voltage 2, nodal voltage 3 and the source voltage's current. The simulation plot is shown below.
+
+![](circuit_test/Python/Py_transientsimpleRC.png)
+
+Python code plot for the dynamic RC circuit
+
+This plot is then compared to the LTSpice simulation to confirm that it is accurate and precise of an existing SPICE software. The LTSpice transient simulation is given below.
+
+![](circuit_test/Python/Transient_dynamicnetwork.png)
+
+LTSpice plot for the dynamic RC circuit
+
+From this, it can be confirmed that my code is working properly and the same format can be used to add more components into the code which would now enable the testings of accelerating more complex dynamic circuits. The code has also been cleaned up for better understanding on the different functions and variables for the transient simulation with comments explaining the different functionalities and executions.
