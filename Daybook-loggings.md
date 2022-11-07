@@ -300,3 +300,31 @@ This plot is then compared to the LTSpice simulation to confirm that it is accur
 LTSpice plot for the dynamic RC circuit
 
 From this, it can be confirmed that my code is working properly and the same format can be used to add more components into the code which would now enable the testings of accelerating more complex dynamic circuits. The code has also been cleaned up for better understanding on the different functions and variables for the transient simulation with comments explaining the different functionalities and executions.
+
+## 7/11/2022
+
+Since the capacitor, resistor and voltage source can now be analysed properly using the code, I have decided to add in the diode matrix that I have done an OP analysis before into the transient simulation. In order to add the diode matrix, the overall equation for the transient simulation is a bit different compared to the equation from the OP analysis. The overall equation can be seen below.
+
+![](circuit_test/Python/overall_eqn_lect.png)
+Overall equation for the transient simulation
+
+The g(x) and y are the nonlinear vector-valued function which represent the resistive part of the circuit and its excitations. However, q(x) is a vector-valued function that expresses the total charge stored by capacitors connected to a specific node in the circuit. In transient simulation, the diode also contains its capacitive part which will be added in the q(x) matrix. The capacitive part of the diode is denoted as cd in the code.
+
+From the code, the diode matrix is assigned in both the OPanalysis_system and the NewtonRaphson_system functions since the diode is a non-linear component. To run the circuit simulation which contains the diode, the circuit below has been made in LTSpice as a reference.
+
+![](circuit_test/Python/LT_dynamicDiodeNetwork.png)
+Dynamic network containing a diode
+
+The simulation is then run on both LTSpice and the Python code to compare if the written code is correct. Both simulations are shown below.
+
+![](circuit_test/Python/sim_LTdiodedynamicnetwork.png)
+
+LTSpice dynamic network containing a diode simulation
+
+![](circuit_test/Python/sim_PYdiodedynamicnetwork.png)
+
+Python code dynamic network containing a diode simulation
+
+It can be seen that the shape of the graph for both are quite similar except for the starting position. Since v2 and v3 are the nodal voltages where the diode is located at, there is a bit of a convergence error during the starting time but then it converges to the correct value which is around 5.76V at 120ms. For the LTSpice simulation, it converges to a value of around 5.70V at 120ms which means that the convergence after some time is almost the same. 
+
+This convergence error could be due to the unoptimized code that does not contain any timestep control or OP analysis control compared to the SPICE simulator software. This can be an extra goal for the project in perfecting the code if it is possible. The next step is to focus on expanding the circuit matrices and accelerating the sparse matrix using C++.
