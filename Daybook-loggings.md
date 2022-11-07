@@ -275,11 +275,11 @@ Python code with C = 100e-10F
 
 LTSpice simulation with C = 100e-10F
 
-As it can be seen, the 2nd nodal voltage plot from the Python code is opposite compared to LTSPice on large capacitances but then have the same plot with smaller capacitances. I suspect that the lack of timestep control might be the fatal error in this simulations. From the [Circuit simulation with Spice Opus](https://books.google.co.uk/books?id=43RNRknMvlgC&amp;printsec=frontcover&amp;redir_esc=y#v=onepage&amp;q&amp;f=false) textbook, convergence error is normal when using Newton-Raphson to solve the matrices. So, a convergence control for the timestep have been added if the Newton-Raphson exceeds 5 loops, the timestep, h, will be divided by 10. However, this seems to still not solve the error so there might be something else that is wrong in the code. Further debugging will be done on the code to check if everything is working properly.
+As it can be seen, the 2nd nodal voltage plot from the Python code is opposite compared to LTSpice on large capacitances but then have the same plot with smaller capacitances. I suspect that the lack of timestep control might be the fatal error in this simulations. From the [Circuit simulation with Spice Opus](https://books.google.co.uk/books?id=43RNRknMvlgC&amp;printsec=frontcover&amp;redir_esc=y#v=onepage&amp;q&amp;f=false) textbook, convergence error is normal when using Newton-Raphson to solve the matrices. So, a convergence control for the timestep have been added if the Newton-Raphson exceeds 5 loops, the timestep, h, will be divided by 10. However, this seems to still not solve the error so there might be something else that is wrong in the code. Further debugging will be done on the code to check if everything is working properly.
 
 ## 4/11/2022
 
-I have noticed that in order to run a proper transient simulation, the OP analysis is an important factor to focus on rather than the timestep control. Surprisingly, my code did not properly establish the OP analysis as the initial condition for the transient simulation. After making some debuggings, I have then added the OP analysis of the linear resistive networks in the circuit matrices as the initial condition for my transient simulation. The simulation then ran properly as intended which is similar to the LTSPice transient simulation.
+I have noticed that in order to run a proper transient simulation, the OP analysis is an important factor to focus on rather than the timestep control. Surprisingly, my code did not properly establish the OP analysis as the initial condition for the transient simulation. After making some debuggings, I have then added the OP analysis of the linear resistive networks in the circuit matrices as the initial condition for my transient simulation. The simulation then ran properly as intended which is similar to the LTSpice transient simulation.
 
 Upon achieving this successful results, I have decided to add make the code more modular to add in more capacitors in the Newton-Raphson solver. This had enable me to simulate bigger circuits as more components can now be added into the circuit matrices. The circuit used as the next test on the new code is shown below.
 
@@ -306,6 +306,7 @@ From this, it can be confirmed that my code is working properly and the same for
 Since the capacitor, resistor and voltage source can now be analysed properly using the code, I have decided to add in the diode matrix that I have done an OP analysis before into the transient simulation. In order to add the diode matrix, the overall equation for the transient simulation is a bit different compared to the equation from the OP analysis. The overall equation can be seen below.
 
 ![](circuit_test/Python/overall_eqn_lect.png)
+
 Overall equation for the transient simulation
 
 The g(x) and y are the nonlinear vector-valued function which represent the resistive part of the circuit and its excitations. However, q(x) is a vector-valued function that expresses the total charge stored by capacitors connected to a specific node in the circuit. In transient simulation, the diode also contains its capacitive part which will be added in the q(x) matrix. The capacitive part of the diode is denoted as cd in the code.
@@ -313,6 +314,7 @@ The g(x) and y are the nonlinear vector-valued function which represent the resi
 From the code, the diode matrix is assigned in both the OPanalysis_system and the NewtonRaphson_system functions since the diode is a non-linear component. To run the circuit simulation which contains the diode, the circuit below has been made in LTSpice as a reference.
 
 ![](circuit_test/Python/LT_dynamicDiodeNetwork.png)
+
 Dynamic network containing a diode
 
 The simulation is then run on both LTSpice and the Python code to compare if the written code is correct. Both simulations are shown below.
