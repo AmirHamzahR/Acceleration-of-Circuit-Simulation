@@ -11,6 +11,7 @@ import time as tm
 import numpy as np
 import matplotlib.pyplot as plt
 
+from numpy import count_nonzero
 # The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
 n = 5001 #5001 seems to be the sweet spot
 
@@ -122,94 +123,6 @@ def C_assigner(node_x,node_y,C,LHS,RHS,init,h):
     
     return New_LHS, New_RHS
 
-def Capacitor_system(C,RHS,LHS,h,init):
-    """
-    Solve nonlinear system F=0 by Newton's method.
-    J is the Jacobian of F. Both F and J must be functions of x.
-    At input, x holds the start value. The iteration continues
-    until ||F|| < eps.
-    """
-    eps = 1e-8
-    error = 9e9
-    iteration_counter = 0
-    solution = init
-        
-    LHS, RHS = C_assigner(2,0,C[0],LHS,RHS,init,h)
-    LHS, RHS = C_assigner(3,0,C[1],LHS,RHS,init,h)
-    
-    while error > eps and iteration_counter < 5000:
-        
-        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
-        error = np.max(np.abs(delta))
-        solution -= delta
-        
-        iteration_counter += 1
-
-    return solution
-    
-def Diode_assigner(node_x,node_y,Is,VT,LHS,RHS,solution):
-    size_LHS = np.shape(LHS)
-    x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT))
-    
-    x1 = x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1)
-    
-    b = Is_assigner(node_x,node_y,-x1,size_LHS[0],size_LHS[1])
-    
-    if(node_x == 0):
-        x = (Is/VT)*(np.exp((solution[node_y-1])/VT))
-        x1 = x*(solution[node_y-1])-Is*(np.exp((solution[node_y-1])/VT)-1)
-    elif(node_y == 0):
-        x = (Is/VT)*(np.exp((solution[node_x-1])/VT))
-        x1 = x*(solution[node_x-1])-Is*(np.exp((solution[node_x-1])/VT)-1)
-    else:
-        x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT))
-        x1 = x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1)
-        
-    # Matrix stamp for a capacitor on RHS
-    a = Is_assigner(node_x,node_y,-x1,size_LHS[0],size_LHS[1])
-    # Matrix stamp for a capacitor on LHS
-    b = R_assigner(node_x,node_y,x,size_LHS[0],size_LHS[1]) 
-    
-    New_LHS = LHS + b
-    New_RHS = RHS + a
-    
-    return New_LHS, New_RHS
-
-def Diode_system(LHS, RHS):
-    """
-    Solve nonlinear system F=0 by Newton's method.
-    J is the Jacobian of F. Both F and J must be functions of x.
-    At input, x holds the start value. The iteration continues
-    until ||F|| < eps.
-    """
-    eps = 1e-9
-    error = 9e9
-    iteration_counter = 0
-    size_LHS = np.shape(LHS)
-    solution = np.ones((size_LHS[0],1))
-    
-    LHS, RHS = Diode_assigner(2,0,Is,VT,LHS,RHS,solution)
-    
-    while error > eps and iteration_counter < 5000:
-        
-        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
-        error = np.max(np.abs(delta))
-        solution -= delta
-        
-        iteration_counter += 1
-        
-    return solution
-
-# A function that adds in voltage for the both LHS and RHS based on MNA stamps
-def Vs_assigner(V_value, node_x, node_y, LHS, RHS):
-    Value = np.array([[V_value]])
-    # Extending the branch at the LHS matrix
-    New_LHS = branch_ext(LHS,node_y,node_x)
-    # Assigning the value at RHS
-    New_RHS = np.concatenate((RHS, Value), axis=0)
-    size_RHS = np.shape(New_RHS)
-    return New_RHS, New_LHS, size_RHS[0]
-
 # A function that extends the matrix with the values needed for the LHS based on MNA stamps
 def branch_ext(M,node_x,node_y):
     # Create the column for voltage stamp
@@ -218,10 +131,10 @@ def branch_ext(M,node_x,node_y):
     if(node_x == 0):
         va[node_y-1,0] = 1
     elif(node_y == 0):
-        va[node_x-1,0] = -1
-    else:
         va[node_x-1,0] = 1
-        va[node_y-1,0] = -1
+    else:
+        va[node_x-1,0] = -1
+        va[node_y-1,0] = 1
     
     # Create the row for voltage stamp
     zero_ext = np.zeros((1,1))
@@ -233,83 +146,131 @@ def branch_ext(M,node_x,node_y):
     M2 = np.vstack((M1,haz))
     
     return M2
-    
-def plu(A):
-    
-    #number of rows
-    n = A.shape[0]
-    
-    #Create P, L, and U matrices
-    U = A.copy()
-    L = np.eye(n, dtype=np.double)
-    P = np.eye(n, dtype=np.double)
-    
-    #Loop between rows
-    for i in range(n):
-        
-        #Permute rows if needed
-        for k in range(i, n): 
-            if ~np.isclose(U[i, i], 0.0):
-                break
-            U[[k, k+1]] = U[[k+1, k]]
-            P[[k, k+1]] = P[[k+1, k]]
-            
-        #Eliminate entries below i with row 
-        #operations on U and reverse the row 
-        #operations to manipulate L
-        factor = U[i+1:, i] / U[i, i]
-        L[i+1:, i] = factor
-        U[i+1:] -= factor[:, np.newaxis] * U[i]
-        
-    return P, L, U
 
-def forward_substitution(L, b):
+# A function that adds in voltage for the both LHS and RHS based on MNA stamps
+def Vs_assigner(V_value, node_x, node_y, LHS, RHS):
+    Value = np.array([[V_value]])
+    # Extending the branch at the LHS matrix
+    New_LHS = branch_ext(LHS,node_x,node_y)
+    # Assigning the value at RHS
+    New_RHS = np.concatenate((RHS, Value), axis=0)
+    size_RHS = np.shape(New_RHS)
+    return New_LHS, New_RHS, size_RHS[0]
+
+def Ind_assigner(L,node_x,node_y,LHS,RHS,h,init):
+    if(L == 0):
+        # Matrix stamp for an inductor on LHS
+        New_LHS = branch_ext(LHS,node_y,node_x)
+        size_LHS = np.shape(New_LHS)
+        New_LHS[size_LHS[0]-1,size_LHS[1]-1] = -L/h
+        Ind_val = np.array([[0]])
+        New_RHS = np.concatenate((RHS, Ind_val), axis=0)
+    else:
+        New_RHS = RHS
+        New_LHS = LHS
+        size_LHS = np.shape(LHS)
+        New_LHS[size_LHS[0]-1,size_LHS[1]-1] = -L/h
+        # Matrix stamp for an inductor on RHS
+        New_RHS[size_LHS[0]-1,0] = -L*init[size_LHS[0]-1,0]/h
     
-    #number of rows
-    n = L.shape[0]
+    return New_LHS, New_RHS
+
+def Diode_assigner(node_x,node_y,Is,VT,cd,h,LHS,RHS,solution):
+    size_LHS = np.shape(LHS)
+    if(node_x == 0):
+        x = (Is/VT)*(np.exp((solution[node_y-1])/VT)) + cd/h
+        x1 = x*(solution[node_y-1])-Is*(np.exp((solution[node_y-1])/VT)-1)
+    elif(node_y == 0):
+        x = (Is/VT)*(np.exp((solution[node_x-1])/VT)) + cd/h
+        x1 = x*(solution[node_x-1])-Is*(np.exp((solution[node_x-1])/VT)-1)
+    else:
+        x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)) + cd/h
+        x1 = x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1)
+    # Matrix stamp for a diode on RHS
+    a = Is_assigner(node_x,node_y,x1,size_LHS[0],size_LHS[1])
+    # Matrix stamp for a diode on LHS
+    b = R_assigner(node_x,node_y,x,size_LHS[0],size_LHS[1])
     
-    #Creating the solution vector
-    y = np.zeros_like(b, dtype=np.double)
+    New_LHS = LHS + b
+    New_RHS = RHS + a
     
-    #Here we perform the forward-substitution.  
-    #Initializing  with the first row.
-    y[0] = b[0] / L[0, 0]
+    return New_LHS, New_RHS
+
+# The Newton Raphson system that solves non-linear and dynamic elements in the circuit
+def NewtonRaphson_system(RHS,LHS,h,init):
+    """
+    Solve nonlinear system F=0 by Newton's method.
+    J is the Jacobian of F. Both F and J must be functions of x.
+    At input, x holds the start value. The iteration continues
+    until ||F|| < eps.
+    """
+    eps = 1e-8
+    error = 9e9
+    iteration_counter = 0
+    solution = init
     
-    #Looping over rows in reverse (from the bottom  up),
-    #starting with the second to last row, because  the 
-    #last row solve was completed in the last step.
-    for i in range(1, n):
-        y[i] = (b[i] - np.dot(L[i,:i], y[:i])) / L[i,i]
+    # Label the non-linear and dynamic components here
+    LHS, RHS = C_assigner(3,0,C[0],LHS,RHS,solution,h)
+    LHS, RHS = C_assigner(4,0,C[1],LHS,RHS,solution,h)
+    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
+    # LHS, RHS = Ind_assigner(0.5e-6,2,0,LHS,RHS,h,solution)
+    # print(RHS)
+      
+    while error > eps and iteration_counter < 50:
         
-    return y
-
-def back_substitution(U, y):
-    
-    #number of rows
-    n = U.shape[0]
-    
-    #Creating the solution vector
-    x = np.zeros_like(y, dtype=np.double)
-
-    #Here we perform the back-substitution.  
-    #Initializing with the last row.
-    x[-1] = y[-1] / U[-1, -1]
-    
-    #Looping over rows in reverse (from the bottom up), 
-    #starting with the second to last row, because the 
-    #last row solve was completed in the last step.
-    for i in range(n-2, -1, -1):
-        x[i] = (y[i] - np.dot(U[i,i:], x[i:])) / U[i,i]
+        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
+        error = np.max(np.abs(delta))
+        solution -= delta
         
-    return x
+        iteration_counter += 1
+        # print(iteration_counter)
+        
+    return solution
 
-def plu_solve(A, b):
+# Function that linearize the DC components using NR algorithm during operating point, t = 0
+def OPanalysis_system(RHS,LHS):
+    """
+    Solve nonlinear system F=0 by Newton's method.
+    J is the Jacobian of F. Both F and J must be functions of x.
+    At input, x holds the start value. The iteration continues
+    until ||F|| < eps.
+    """
+    eps = 1e-8
+    error = 9e9
+    iteration_counter = 0
+    size = np.shape(LHS)
+    solution = np.zeros((size[0],1))
     
-    P, L, U = plu(A)
+    # Label the non-linear components here
+    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
+    # LHS, RHS = Ind_assigner(0,2,0,LHS,RHS,h,solution)
     
-    y = forward_substitution(L, np.dot(P, b))
+    size = np.shape(LHS)
+    solution = np.zeros((size[0],1))
     
-    return back_substitution(U, y)
+    # iteration counter set to 50 as followed by the SPICE OPUS textbook
+    while error > eps and iteration_counter < 50:
+        
+        delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
+        error = np.max(np.abs(delta))
+        solution -= delta
+        
+        iteration_counter += 1
+    # saves the LHS, RHS, and solution matrices in CSV files
+    np.savetxt('mat_Solution.csv',solution, fmt = '%f', delimiter=",") 
+    np.savetxt('mat_LHS.csv',LHS, fmt = '%f', delimiter=",")
+    np.savetxt('mat_RHS.csv',RHS, fmt = '%f', delimiter=",")  
+    # print(1.0 - count_nonzero(LHS) / LHS.size) # just to count the non-zeros and see how sparse it is
+    
+    return LHS, RHS, solution 
+
+# total number of nodes and voltage sources that is contained to build the base matrix 
+# that contains only zeros which will then be occupied with values from the components
+T_nodes = 4
+
+# Size of matrix
+Maxi = T_nodes
+Maxj = Maxi
 
 # Values of the variables
 # Initial voltage before turning on:
@@ -330,14 +291,6 @@ R = [
     3e3,1e3
 ]
 
-# total number of nodes and voltage sources that is contained to build the base matrix 
-# that contains only zeros which will then be occupied with values from the components
-T_nodes = 3
-
-# Size of matrix
-Maxi = T_nodes
-Maxj = Maxi
-
 # Resistor values in a similar format of SPICE simulators's netlist
 I_stamp = [
     # default state (for RHS) - Is_assigner(0,0,I[0],Maxi,Maxj)
@@ -349,21 +302,24 @@ RHS = mat_sum(I_stamp)
 R_stamp = [
     # default state (for LHS) - R_assigner(0,0,0,Maxi,Maxj)
     R_assigner(2,1,cond(R[0]),Maxi,Maxj),
-    R_assigner(3,2,cond(R[1]),Maxi,Maxj)
+    R_assigner(4,3,cond(R[1]),Maxi,Maxj)
 ]
 
 # Adding the resistor values from the stamp to create the overall RHS matrix
 LHS = mat_sum(R_stamp)
 
 # Adding the branch values from different stamp sources (eg. Voltage source, VCCS) which affects both LHS and RHS
-RHS, LHS, Vs_locate = Vs_assigner(Vs[0], 1, 0, LHS, RHS)
+LHS, RHS, Vs_locate = Vs_assigner(Vs[0], 1, 0, LHS, RHS)
 
 # OP analysis for the initial conditions for the transient simulation
-init = np.linalg.solve(LHS,RHS)
+LHS, RHS, init = OPanalysis_system(RHS,LHS)
+
+print("OP analysis results:\n",init)
 
 volt1 = np.ones((n,1))
 volt2 = np.ones((n,1))
 volt3 = np.ones((n,1))
+volt4 = np.ones((n,1))
 current = np.ones((n,1))
 
 # get the start time
@@ -380,14 +336,15 @@ match simul:
             RHS[Vs_locate-1,0] = v_value
             
             # Using Newton-Raphson and backward euler stamp to simulate the capacitors in the circuit
-            ans = Capacitor_system(C,RHS,LHS,h,init)
+            ans = NewtonRaphson_system(RHS,LHS,h,init)
             x_solution = ans
             
             # Storing the final results at the given timestep
             volt1[i] = x_solution[0]
             volt2[i] = x_solution[1]
             volt3[i] = x_solution[2]
-            current[i] = x_solution[3]
+            volt4[i] = x_solution[3]
+            current[i] = x_solution[4]
             
         et = tm.time()
         # Plotting the Graph
@@ -395,6 +352,7 @@ match simul:
         plt.plot(t, volt1, color = 'red', label = '$nodal voltage 1$')
         plt.plot(t, volt2, color = 'blue', label = '$nodal voltage 2$')
         plt.plot(t, volt3, color = 'green', label = '$nodal voltage 3$')
+        plt.plot(t, volt4, color = 'black', label = '$nodal voltage 4$')
         plt.plot(t, current, color = 'yellow', label = '$current$')
         plt.xlabel('Time ($s$)')
         plt.ylabel('Variables ($v1$, $v2$, $v3$, current)')
@@ -404,8 +362,7 @@ match simul:
         plt.minorticks_on()
         plt.grid(which='minor', alpha=0.2)
         # get the end time     
-           
-    
+        
     # 2 does the sine wave voltage source
     case 2:
         for i in range (0, len(t)):
