@@ -335,7 +335,7 @@ This convergence error could be due to the unoptimized code that does not contai
 
 A meeting with my supervisor was held today and we had found a really good breakthrough on the code. We had debugged the code on why the diode could not perform correctly as the one in the LTSpice. The first method we tried was by adding another resistor in front of the diode with a really small resistance. In theory, it should not have any effect on the graph since the resistance is really small. This is to debug if the problem is due to the resistor stamp which affects the way the diode's response in the output signal of the circuit. The new circuit that was added can be seen below.
 
-![](first_debugdiode)
+![](circuit_test/Python/first_diodedebug.png)
 
 First debugging circuit for the diode
 
@@ -343,41 +343,41 @@ After running the simulation, it seems that there is no changes to the graph whi
 
 To debug this, the diode is isolated in a normal resistor and diode circuit which can be seen below.
 
-![](second_debugdiode)
+![](circuit_test/Python/second_diodedebug.png)
 
 Second debugging circuit for the diode
 
 From this circuit it enables us to check if the diode model is the problem with the circuit. A suggestion from Dr Danial is to try simulating a normal diode making the current flowing in one way. The parameters for the input voltage is also changed from 2V and 6V to -1V and 1V as the off and on voltage respectively. This would enable us to see if the output signal would be flipped if the diode was flipped. The normal direction of the diode was first chosen from node 2 to node 0 which is opposite from the figure above. The graphs of the Python code and LTSpice simulation are then analysed and compared to see if they are the same. The graphs are shown below.
 
-![](pyfirstdebug)
+![](circuit_test/Python/py1stdiodedebug.png)
 
 Python simulation
 
-![](ltfirstdebug)
+![](circuit_test/Python/lt1stdiodedebug.png)
 
 LTSpice simulation
 
 The graphs of the code could be seen to be the same. So, it means that it works if the diode is facing on that particular direction. Now, the position of the diode is reversed to see if there are any change on the graphs. The diode is then changed from node 0 to node 2 which is the position that can be seen in the circuit figure above. The graphs of the Python code and LTSpice simulation are then analysed and compared to see if they are the same. The graphs are shown below.
 
-![](pyseconddebug)
+![](circuit_test/Python/py2nddebug.png)
 
 Python simulation
 
-![](ltseconddebug)
+![](circuit_test/Python/lt2nddebug.png)
 
 LTSpice simulation
 
 The graph of the code is now different compared to the LTSpice simulation. It can be seen that the convergence error now occurs when the diode is opposite. The only possible explanation is that there is an error when the diode is modelled inside the code. From the circuit theory, the diode is modelled after a resistor and a capacitor in parallel with the current, id, flowing across them. This is seen on the figure below.
 
-![](diodemodel)
+![](circuit_test/Python/diodemodel.png)
 
 Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below .
 
-![](pycorrectdiode)
+![](circuit_test/Python/py_correctdiode.png)
 
 Python simulation
 
-![](ltseconddebug)
+![](circuit_test/Python/lt2nddebug.png)
 
 LTSpice simulation
 
