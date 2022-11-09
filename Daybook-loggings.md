@@ -381,7 +381,7 @@ Python simulation
 
 LTSpice simulation
 
-It can be seen that the graphs are now the same but it contains a slight error when it starts because initially it is trying to solve 
+It can be seen that the graphs are now the same but it contains a slight error when it starts because my code does not have any timestep control. This goes the same for the value when it is turned off or on depending on the diode's position. The value of the voltage seems to be a slightly different compared to the LTspice simulation. From the python code simulation, the nodal voltage 2 when it is turned off is around -0.5464V while the LTSpice simulation is around -0.5028V. This means that the error is calculated to be around 8% without any timestep control. It is still considered quite accurate with an accuracy percentage of 92% for the python code simulation. From this, transistor models can be added in the python code. Another new objective is also translating the python code into C++ code to evaluate the multi-core processor's performance improvements. 
 
 
 
