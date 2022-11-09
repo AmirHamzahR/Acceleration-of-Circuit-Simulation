@@ -371,7 +371,7 @@ The graph of the code is now different compared to the LTSpice simulation. It ca
 
 ![](circuit_test/Python/diodemodel.png)
 
-Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below .
+Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. A possible explanation for this is because the RHS takes in the value of the current, so the current is opposite when it is on the opposite direction, thus the negative sign is needed. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below .
 
 ![](circuit_test/Python/py_correctdiode.png)
 
