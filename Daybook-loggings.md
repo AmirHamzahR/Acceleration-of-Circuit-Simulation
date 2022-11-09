@@ -330,3 +330,60 @@ Python code dynamic network containing a diode simulation
 It can be seen that the shape of the graph for both are quite similar except for the starting position. Since v2 and v3 are the nodal voltages where the diode is located at, there is a bit of a convergence error during the starting time but then it converges to the correct value which is around 5.76V at 120ms. For the LTSpice simulation, it converges to a value of around 5.70V at 120ms which means that the convergence after some time is almost the same. 
 
 This convergence error could be due to the unoptimized code that does not contain any timestep control or OP analysis control compared to the SPICE simulator software. This can be an extra goal for the project in perfecting the code if it is possible. The next step is to focus on expanding the circuit matrices and accelerating the sparse matrix using C++.
+
+## 8/11/2022 
+
+A meeting with my supervisor was held today and we had found a really good breakthrough on the code. We had debugged the code on why the diode could not perform correctly as the one in the LTSpice. The first method we tried was by adding another resistor in front of the diode with a really small resistance. In theory, it should not have any effect on the graph since the resistance is really small. This is to debug if the problem is due to the resistor stamp which affects the way the diode's response in the output signal of the circuit. The new circuit that was added can be seen below.
+
+![](first_debugdiode)
+
+First debugging circuit for the diode
+
+After running the simulation, it seems that there is no changes to the graph which means that the resistor stamp is not the problem in this code. From the previous diode simulation graph on the python code, it can be seen that only nodal voltages 2 and 3 are having the oscillation problem. Dr Danial commented that the oscillation could not have occurred at the first place since there are no inductors in the circuit to provide any oscillation. This could only mean that the problem is between nodal voltages 2 and 3 which is the diode. 
+
+To debug this, the diode is isolated in a normal resistor and diode circuit which can be seen below.
+
+![](second_debugdiode)
+
+Second debugging circuit for the diode
+
+From this circuit it enables us to check if the diode model is the problem with the circuit. A suggestion from Dr Danial is to try simulating a normal diode making the current flowing in one way. The parameters for the input voltage is also changed from 2V and 6V to -1V and 1V as the off and on voltage respectively. This would enable us to see if the output signal would be flipped if the diode was flipped. The normal direction of the diode was first chosen from node 2 to node 0 which is opposite from the figure above. The graphs of the Python code and LTSpice simulation are then analysed and compared to see if they are the same. The graphs are shown below.
+
+![](pyfirstdebug)
+
+Python simulation
+
+![](ltfirstdebug)
+
+LTSpice simulation
+
+The graphs of the code could be seen to be the same. So, it means that it works if the diode is facing on that particular direction. Now, the position of the diode is reversed to see if there are any change on the graphs. The diode is then changed from node 0 to node 2 which is the position that can be seen in the circuit figure above. The graphs of the Python code and LTSpice simulation are then analysed and compared to see if they are the same. The graphs are shown below.
+
+![](pyseconddebug)
+
+Python simulation
+
+![](ltseconddebug)
+
+LTSpice simulation
+
+The graph of the code is now different compared to the LTSpice simulation. It can be seen that the convergence error now occurs when the diode is opposite. The only possible explanation is that there is an error when the diode is modelled inside the code. From the circuit theory, the diode is modelled after a resistor and a capacitor in parallel with the current, id, flowing across them. This is seen on the figure below.
+
+![](diodemodel)
+
+Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below .
+
+![](pycorrectdiode)
+
+Python simulation
+
+![](ltseconddebug)
+
+LTSpice simulation
+
+It can be seen that the graphs are now the same but it contains a slight error when it starts because initially it is trying to solve 
+
+
+
+
+
