@@ -1,0 +1,26 @@
+- keep trying different circuit, document it, LTSPice, 
+until reach the limit 
+
+- add in inductors (as low priority)
+
+- see if can model transistor as 3 port or 4 port, can use
+lookup table get the IV curves, can do piecewise linear,
+plot in IV curve, important the 3 port integrate circuit,
+submatrix (important)
+
+- use armadillo, convert python to C++, see how Jacobian works,
+don't change the algorithm, armadillo is already accelerating, run
+it on multiple core (for CPU, GPU maybe) (important)
+
+- for FPGA, use VItisAI
+
+1) Modify code for multiple cores in CPU
+
+2) Then, modify for multiple cores in GPU
+
+- run multiple simulation on each core, different statistical variation
+- condition to parallelize it
+- check profilers in Linux (checks how much cache are you using)
+- DDr memory, bottleneck
+
+3) Make a graph with total nodes, C++ and Python 

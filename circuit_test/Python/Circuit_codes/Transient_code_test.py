@@ -177,23 +177,22 @@ def Ind_assigner(L,node_x,node_y,LHS,RHS,h,init):
 
 def Diode_assigner(node_x,node_y,Is,VT,cd,h,LHS,RHS,solution):
     size_LHS = np.shape(LHS)
-    
     if(node_x == 0):
-        x = (Is/VT)*(np.exp((-solution[node_y-1])/VT)) + cd/h
+        x = (Is/VT)*(np.exp((-solution[node_y-1])/VT)) 
         x1 = -(x*(-solution[node_y-1])-Is*(np.exp((-solution[node_y-1])/VT)-1))
     elif(node_y == 0):
-        x = (Is/VT)*(np.exp((solution[node_x-1]-0)/VT)) + cd/h
-        x1 = (x*(solution[node_x-1]-0)-Is*(np.exp((solution[node_x-1]-0)/VT)-1))
+        x = (Is/VT)*(np.exp((solution[node_x-1]-0)/VT)) 
+        x1 = (x*(solution[node_x-1])-Is*(np.exp((solution[node_x-1])/VT)-1))
     else:
-        x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)) + cd/h
+        x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)) 
         x1 = -(x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1))
-    
     # Matrix stamp for a diode on RHS
     a = Is_assigner(node_x,node_y,x1,size_LHS[0],size_LHS[1])
     # Matrix stamp for a diode on LHS
     b = R_assigner(node_x,node_y,x,size_LHS[0],size_LHS[1])
     
-    New_LHS = LHS + b
+    c = R_assigner(node_x,node_y,cd/h,size_LHS[0],size_LHS[1])
+    New_LHS = LHS + b + c
     New_RHS = RHS + a
     
     return New_LHS, New_RHS
@@ -212,9 +211,9 @@ def NewtonRaphson_system(RHS,LHS,h,init):
     solution = init
     
     # Label the non-linear and dynamic components here
-    LHS, RHS = C_assigner(3,0,C[0],LHS,RHS,solution,h)
-    LHS, RHS = C_assigner(4,0,C[1],LHS,RHS,solution,h)
-    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
+    # LHS, RHS = C_assigner(3,0,C[0],LHS,RHS,solution,h)
+    # LHS, RHS = C_assigner(4,0,C[1],LHS,RHS,solution,h)
+    LHS, RHS = Diode_assigner(0,2,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
     # LHS, RHS = Ind_assigner(0.5e-6,2,0,LHS,RHS,h,solution)
     # print(RHS)
       
@@ -244,7 +243,7 @@ def OPanalysis_system(RHS,LHS):
     solution = np.zeros((size[0],1))
     
     # Label the non-linear components here
-    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,0,h,LHS,RHS,solution)
+    LHS, RHS = Diode_assigner(0,2,2.7e-9,0.05,0,h,LHS,RHS,solution)
     # LHS, RHS = Ind_assigner(0,2,0,LHS,RHS,h,solution)
     
     size = np.shape(LHS)
@@ -268,7 +267,7 @@ def OPanalysis_system(RHS,LHS):
 
 # total number of nodes and voltage sources that is contained to build the base matrix 
 # that contains only zeros which will then be occupied with values from the components
-T_nodes = 4
+T_nodes = 2
 
 # Size of matrix
 Maxi = T_nodes
@@ -276,7 +275,7 @@ Maxj = Maxi
 
 # Values of the variables
 # Initial voltage before turning on:
-V1 = 2
+V1 = -1
 Vs = [
     V1
 ]
@@ -286,11 +285,11 @@ I = [
 ]
 
 C = [
-    0.4e-6,0.8e-6
+    0
 ]
 
 R = [
-    3e3,1e3
+    3e3
 ]
 
 # Resistor values in a similar format of SPICE simulators's netlist
@@ -303,8 +302,7 @@ I_stamp = [
 RHS = mat_sum(I_stamp)
 R_stamp = [
     # default state (for LHS) - R_assigner(0,0,0,Maxi,Maxj)
-    R_assigner(2,1,cond(R[0]),Maxi,Maxj),
-    R_assigner(4,3,cond(R[1]),Maxi,Maxj)
+    R_assigner(2,1,cond(R[0]),Maxi,Maxj)
 ]
 
 # Adding the resistor values from the stamp to create the overall RHS matrix
@@ -333,7 +331,7 @@ match simul:
             
             # The functions and variables needed for the pulse wave voltage source
             t1 = t1 + h
-            V_t, t1 = V_pulse(V1 = V1,V2 = 6,t1 = t1,td = 1e-3,tr = 0.5e-3,tf = 0.2e-3,tpw = 2e-3,tper = 4e-3)
+            V_t, t1 = V_pulse(V1 = V1,V2 = 1,t1 = t1,td = 1e-3,tr = 0.5e-3,tf = 0.2e-3,tpw = 2e-3,tper = 4e-3)
             v_value = np.array([[V_t]])
             RHS[Vs_locate-1,0] = v_value
             
@@ -345,8 +343,8 @@ match simul:
             volt1[i] = x_solution[0]
             volt2[i] = x_solution[1]
             volt3[i] = x_solution[2]
-            volt4[i] = x_solution[3]
-            volt5[i] = x_solution[4]
+            # volt4[i] = x_solution[3]
+            # volt5[i] = x_solution[4]
             
         et = tm.time()
         # Plotting the Graph
@@ -354,8 +352,8 @@ match simul:
         plt.plot(t, volt1, color = 'red', label = '$nodal voltage 1$')
         plt.plot(t, volt2, color = 'blue', label = '$nodal voltage 2$')
         plt.plot(t, volt3, color = 'green', label = '$nodal voltage 3$')
-        plt.plot(t, volt4, color = 'black', label = '$nodal voltage 4$')
-        plt.plot(t, volt5, color = 'yellow', label = '$nodal voltage 5$')
+        # plt.plot(t, volt4, color = 'black', label = '$nodal voltage 4$')
+        # plt.plot(t, volt5, color = 'yellow', label = '$nodal voltage 5$')
         plt.xlabel('Time ($s$)')
         plt.ylabel('Variables ($v1$, $v2$, $v3$, current)')
         plt.title('Variation of the Variables ($v1$, $v2$, $v3$, current) with Time\n')

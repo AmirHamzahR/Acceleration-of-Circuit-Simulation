@@ -80,14 +80,63 @@ tf = 0.2e-3
 tpw = 2e-3
 tper = 4e-3
 
+def max_size(list_of_matrices):
+    shape_of_mat = list_of_matrices
+    for i in range(0, len(list_of_matrices)):
+        shape_of_mat[i] = np.shape(list_of_matrices[i])
+    size_of_mat = max(shape_of_mat)
+    return size_of_mat
+
+def branch_ext(M):
+    # Create the column for voltage stamp
+    size_a = np.shape(M)
+    va= np.zeros((size_a[0],1))
+    print(M)
+    # Create the row for voltage stamp
+    zero_ext = np.zeros((1,1))
+    ha = va[..., None]
+    haz = np.concatenate((ha,zero_ext),axis=None)
+    
+    #Contatenate both for the new matrix
+    M1 = np.hstack((M,va))
+    M2 = np.vstack((M1,haz))
+    
+    return M2
+
+def same_size(list_of_matrices):
+    same_size_list = list_of_matrices
+    expanded_matrix = list_of_matrices
+    shape_of_mat = list_of_matrices
+    iter = 0
+    size_expansion = max_size(list_of_matrices)
+    for i in range(0, len(list_of_matrices)):
+        shape_of_mat[i] = np.shape(list_of_matrices[i])
+        
+        while shape_of_mat[i] < size_expansion :
+            # print(i)
+            expanded_matrix = branch_ext((same_size_list[i]))
+            
+            shape_of_mat[i] = np.shape(expanded_matrix)
+        
+    return same_size_list
+
 LHS = np.array([[0.000001, 0, 1],
         [0, 1, 0],
         [ 1, 0, 0]])
 
+RHS1 = np.array([[0,1],
+               [0,1]])
+
+# print(branch_ext(LHS))
 RHS = np.array([[0],
                [0],
+               [1],
                [1]])
-print(np.linalg.solve(LHS,RHS))
+list_of_RHS = [
+    LHS,
+    RHS1
+]
+print(same_size(list_of_RHS))
 
 # Outer Time Loop
 
