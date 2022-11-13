@@ -81,7 +81,7 @@ def Is_assigner(node_x,node_y,I,maxi,maxj):
     maxj = 1
     a = matrix(maxi,maxj)
     if(node_x == 0):
-        a[node_y-1][0] = I
+        a[node_y-1][0] = -I
     elif(node_y == 0):
         a[node_x-1][0] = I
     else:
@@ -179,7 +179,7 @@ def Diode_assigner(node_x,node_y,Is,VT,cd,h,LHS,RHS,solution):
     size_LHS = np.shape(LHS)
     if(node_x == 0):
         x = (Is/VT)*(np.exp((-solution[node_y-1])/VT)) 
-        x1 = -(x*(-solution[node_y-1])-Is*(np.exp((-solution[node_y-1])/VT)-1))
+        x1 = (x*(-solution[node_y-1])-Is*(np.exp((-solution[node_y-1])/VT)-1))
     elif(node_y == 0):
         x = (Is/VT)*(np.exp((solution[node_x-1]-0)/VT)) 
         x1 = (x*(solution[node_x-1])-Is*(np.exp((solution[node_x-1])/VT)-1))

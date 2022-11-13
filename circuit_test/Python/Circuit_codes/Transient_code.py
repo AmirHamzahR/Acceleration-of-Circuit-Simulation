@@ -81,12 +81,12 @@ def Is_assigner(node_x,node_y,I,maxi,maxj):
     maxj = 1
     a = matrix(maxi,maxj)
     if(node_x == 0):
-        a[node_y-1][0] = I
+        a[node_y-1][0] = -I
     elif(node_y == 0):
         a[node_x-1][0] = I
     else:
-        a[node_x-1][maxj-1] = -I
-        a[node_y-1][maxj-1] = I
+        a[node_x-1][maxj-1] = I
+        a[node_y-1][maxj-1] = -I
     return a
 
 # A function that initiliaze the resistor values and input into the LHS matrices based on MNA stamps
@@ -180,13 +180,13 @@ def Diode_assigner(node_x,node_y,Is,VT,cd,h,LHS,RHS,solution):
     
     if(node_x == 0):
         x = (Is/VT)*(np.exp((-solution[node_y-1])/VT)) + cd/h
-        x1 = -(x*(-solution[node_y-1])-Is*(np.exp((-solution[node_y-1])/VT)-1))
+        x1 = (x*(-solution[node_y-1])-Is*(np.exp((-solution[node_y-1])/VT)-1))
     elif(node_y == 0):
         x = (Is/VT)*(np.exp((solution[node_x-1]-0)/VT)) + cd/h
         x1 = (x*(solution[node_x-1]-0)-Is*(np.exp((solution[node_x-1]-0)/VT)-1))
     else:
         x = (Is/VT)*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)) + cd/h
-        x1 = -(x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1))
+        x1 = (x*(solution[node_x-1]-solution[node_y-1])-Is*(np.exp((solution[node_x-1]-solution[node_y-1])/VT)-1))
     
     # Matrix stamp for a diode on RHS
     a = Is_assigner(node_x,node_y,x1,size_LHS[0],size_LHS[1])
