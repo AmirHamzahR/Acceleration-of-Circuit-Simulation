@@ -108,7 +108,7 @@ def C_assigner(node_x,node_y,C,LHS,RHS,init,h):
     size_LHS = np.shape(LHS)
     x = C/h
     if(node_x == 0):
-        x1 = C*init[node_y-1]/h
+        x1 = C*(-init[node_y-1])/h
     elif(node_y == 0):
         x1 = C*init[node_x-1]/h
     else:
@@ -212,9 +212,9 @@ def NewtonRaphson_system(RHS,LHS,h,init):
     solution = init
     
     # Label the non-linear and dynamic components here
-    LHS, RHS = C_assigner(3,0,C[0],LHS,RHS,solution,h)
-    LHS, RHS = C_assigner(4,0,C[1],LHS,RHS,solution,h)
-    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
+    LHS, RHS = C_assigner(2,0,C[0],LHS,RHS,solution,h)
+    LHS, RHS = C_assigner(3,0,C[1],LHS,RHS,solution,h)
+    # LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,4e-12,h,LHS,RHS,solution)
     # LHS, RHS = Ind_assigner(0.5e-6,2,0,LHS,RHS,h,solution)
     # print(RHS)
       
@@ -223,9 +223,9 @@ def NewtonRaphson_system(RHS,LHS,h,init):
         delta = np.linalg.solve(LHS, np.matmul(LHS,solution) - RHS)
         error = np.max(np.abs(delta))
         solution -= delta
-        
         iteration_counter += 1
-        # print(iteration_counter)
+        print(iteration_counter)
+        print(LHS,RHS)
         
     return solution
 
@@ -244,7 +244,7 @@ def OPanalysis_system(RHS,LHS):
     solution = np.zeros((size[0],1))
     
     # Label the non-linear components here
-    LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,0,h,LHS,RHS,solution)
+    # LHS, RHS = Diode_assigner(2,3,2.7e-9,0.05,0,h,LHS,RHS,solution)
     # LHS, RHS = Ind_assigner(0,2,0,LHS,RHS,h,solution)
     
     size = np.shape(LHS)
@@ -264,11 +264,11 @@ def OPanalysis_system(RHS,LHS):
     np.savetxt('mat_RHS.csv',RHS, fmt = '%f', delimiter=",")  
     # print(1.0 - count_nonzero(LHS) / LHS.size) # just to count the non-zeros and see how sparse it is
     
-    return LHS, RHS, solution 
+    return solution 
 
 # total number of nodes and voltage sources that is contained to build the base matrix 
 # that contains only zeros which will then be occupied with values from the components
-T_nodes = 4
+T_nodes = 3
 
 # Size of matrix
 Maxi = T_nodes
@@ -304,7 +304,7 @@ RHS = mat_sum(I_stamp)
 R_stamp = [
     # default state (for LHS) - R_assigner(0,0,0,Maxi,Maxj)
     R_assigner(2,1,cond(R[0]),Maxi,Maxj),
-    R_assigner(4,3,cond(R[1]),Maxi,Maxj)
+    R_assigner(2,3,cond(R[1]),Maxi,Maxj)
 ]
 
 # Adding the resistor values from the stamp to create the overall RHS matrix
@@ -313,8 +313,10 @@ LHS = mat_sum(R_stamp)
 # Adding the branch values from different stamp sources (eg. Voltage source, VCCS) which affects both LHS and RHS
 LHS, RHS, Vs_locate = Vs_assigner(Vs[0], 1, 0, LHS, RHS)
 
+print("LHS matrix results:\n",LHS)
+print("RHS matrix results:\n",RHS)
 # OP analysis for the initial conditions for the transient simulation
-LHS, RHS, init = OPanalysis_system(RHS,LHS)
+init = OPanalysis_system(RHS,LHS)
 
 print("OP analysis results:\n",init)
 
@@ -346,7 +348,7 @@ match simul:
             volt2[i] = x_solution[1]
             volt3[i] = x_solution[2]
             volt4[i] = x_solution[3]
-            volt5[i] = x_solution[4]
+            # volt5[i] = x_solution[4]
             
         et = tm.time()
         # Plotting the Graph
