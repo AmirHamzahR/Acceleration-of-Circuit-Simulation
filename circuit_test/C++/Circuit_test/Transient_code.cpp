@@ -258,8 +258,8 @@ int main(int argc, const char ** argv){
 
     // TRANSIENT SIMULATION SETTINGS
     // The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
-    int n{5001}; // 5001 seems to be the sweet spot
-    int i{0};
+    int n = 5001; // 5001 seems to be the sweet spot
+    int i = 0;
     // Defining the Time and Timestep for Transient Simulation
     arma::mat X1 = arma::ones(n,1);
     double t_start = 0;
@@ -298,6 +298,7 @@ int main(int argc, const char ** argv){
     double tf = 0.2e-3;
     double tpw = 2e-3;
     double tper = 4e-3;
+    
     // Assigning the voltage matrix on LHS and RHS
     Vs_assigner(1,0,V1,LHS,RHS);
 
