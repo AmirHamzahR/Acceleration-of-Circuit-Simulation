@@ -58,8 +58,23 @@ void print_v(std::vector <mat> const &a) {
    std::cout << a.at(i) << ' ';
    std::cout << "The size of the vector is " << a.size();
 }
-
+vec arange(double tstart, double h, double vec_size){
+    vec time = zeros(vec_size,1);
+    time[0] = tstart;
+    for(int i=1; i<vec_size; ++i)
+    {
+        time[i] = tstart + h;
+        tstart = tstart + h;
+    }
+    return time;
+}
 int main(int argc, const char ** argv){
+    double n = 5001;
+    double t_start = 0;
+    double t_end = 12e-2;
+    int t1 = 0;
+    double t = t_end - t_start;
+    double h = t/(n-1);
     mat LHS(5,5,fill::randu);
     // mat RHS(5,1,fill::randu);
     // LHS.print("The old LHS is:");
@@ -73,11 +88,10 @@ int main(int argc, const char ** argv){
     // // End of assignment
     // LHS.print("The New LHS is:");
     // RHS.print("The New RHS is:");
-
-    vector<mat> test = { LHS, LHS};
-    print_v(test);
     
     
+    vec test = arange(t_start, h, n);
+    test.print("The time vector:");
     return 0;
 }
     //Initialize the random generator 
