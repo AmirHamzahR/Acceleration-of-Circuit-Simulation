@@ -489,7 +489,7 @@ LTSpice simulation for diode RC network
 
 C++ code simulation for diode RC network
 
-As can be seen, the C++ code is quite similar to the LTSpice graph but there is a few minor oscillations around the initial time until around 0.3s. A speculation of mine is that since there is no timestep control, the non-linearity of the circuit made the initial values to oscillate further than it is supposed to. One way of fixing this is by referring back to the Tuma-Buermen textbook and see how it solves the convergence errors. From the textbook, is seems that Newton-Raphson method gives some different convergence levels due to the circuit's non-linearity. Due to this, it is advisable to set the iteration to around 8 and use a timestep control algorithm for the breakpoint of the convergence. 
+As can be seen, the C++ code is quite similar to the LTSpice graph but there is a few minor oscillations around the initial time until around 0.03s. A speculation of mine is that since there is no timestep control, the non-linearity of the circuit made the initial values to oscillate further than it is supposed to. One way of fixing this is by referring back to the Tuma-Buermen textbook and see how it solves the convergence errors. From the textbook, is seems that Newton-Raphson method gives some different convergence levels due to the circuit's non-linearity. Due to this, it is advisable to set the iteration to around 8 and use a timestep control algorithm for the breakpoint of the convergence. 
 
 Since the initial limit for NR iterations was 50, I then changed it to 5 to see how well it would perform as to limit the convergence of the non-linear circuit. The transient analysis is then run and plotted using Python which is shwon on the graph below.
 
