@@ -40,10 +40,9 @@ double cond(double R){
 // extra -  adding arange() function here to return the time vector
 arma::vec arange(double tstart, double h, double vec_size){
     arma::vec time = arma::zeros(vec_size,1);
-    time[0] = tstart;
-    for(int i=1; i<vec_size; ++i)
+    for(int i=0; i<vec_size; ++i)
     {
-        time[i] = tstart + h;
+        time[i] = tstart;
         tstart = tstart + h;
     }
     return time;
@@ -317,7 +316,7 @@ int main(int argc, const char ** argv){
     Maxj = RHS.n_cols;
     arma::mat init = arma::zeros(Maxi,Maxj);
     // OP analysis used as initial condition for next evaluation
-    int mode = 0; // 0 to do OP analysis, 1 to do transient simulation
+    int mode = 0; // 0 to do OP analysis
     init = NewtonRaphson_system(LHS,RHS,init,h,mode);
 
     init.print("The OP analysis of the circuit is: ");
@@ -329,7 +328,7 @@ int main(int argc, const char ** argv){
         RHS.row(V_locate1-1).col(0) = volt_pulse.first;
         t1 = volt_pulse.second;
         // Calling the Newton-Raphson system here
-        mode = 1;
+        mode = 1; // 1 to do transient simulation
         init = NewtonRaphson_system(LHS,RHS,init,h,mode);
         // Assigning the variables that will be plotted and analysed as seen in a circuit simulator
         volt1[i] = init[0];
