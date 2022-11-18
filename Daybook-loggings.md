@@ -371,7 +371,7 @@ The graph of the code is now different compared to the LTSpice simulation. It ca
 
 ![](circuit_test/Python/diodemodel.png)
 
-Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. A possible explanation for this is because the RHS takes in the value of the current, so the current is opposite when it is on the opposite direction, thus the negative sign is needed. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below .
+Since the diode uses Shockley's diode equation for the linearized model, it can only mean that the problem is with the equation. I then noticed that sometimes the convergence could oscillate quite far if the signs of the variable is different. In this case, the sign of the equation is then changed to see if the problem is solved. A possible explanation for this is because the RHS takes in the value of the current, so the current is opposite when it is on the opposite direction, thus the negative sign is needed. The simulation is made again with the sign changed on the x1 variable in the Diode_assigner function that feeds in the RHS matrix. The simulation of the circuit from the graphs are shown below.
 
 ![](circuit_test/Python/py_correctdiode.png)
 
@@ -381,8 +381,125 @@ Python simulation
 
 LTSpice simulation
 
-It can be seen that the graphs are now the same but it contains a slight error when it starts because my code does not have any timestep control. This goes the same for the value when it is turned off or on depending on the diode's position. The value of the voltage seems to be a slightly different compared to the LTspice simulation. From the python code simulation, the nodal voltage 2 when it is turned off is around -0.5464V while the LTSpice simulation is around -0.5028V. This means that the error is calculated to be around 8% without any timestep control. It is still considered quite accurate with an accuracy percentage of 92% for the python code simulation. From this, transistor models can be added in the python code. Another new objective is also translating the python code into C++ code to evaluate the multi-core processor's performance improvements. 
+It can be seen that the graphs are now the same but it contains a slight error when it starts because my code does not have any timestep control. This goes the same for the value when it is turned off or on depending on the diode's position. The value of the voltage seems to be a slightly different compared to the LTspice simulation. From the python code simulation, the nodal voltage 2 when it is turned off is around -0.5464V while the LTSpice simulation is around -0.5028V. This means that the error is calculated to be around 8% without any timestep control. It is still considered quite accurate with an accuracy percentage of 92% for the python code simulation. The circuit from the first debugging has been tested again to see if the diode is working properly inside the transient simulation of the python code. The results of the python code can be seen below.
 
+![](circuit_test/Python/Py_diodefull.png)
+
+Python code transient simulation
+
+![](circuit_test/Python/sim_LTdiodedynamicnetwork.png)
+
+LTSpice transient simulation
+
+It can now be seen that the python code simulation results is the same as the LTspice transient simulation. From this, transistor models can be added in the python code. Another new objective is also translating the python code into C++ code to evaluate the multi-core processor's performance improvements. 
+
+## 9/11/2022
+
+The C++ code has been added using the [armadillo library (documentation)](https://arma.sourceforge.net/docs.html#solve) by using the same methods and algorithm with the python code.. The aim is to finish the Voltage source, Current source, and Resistor stamp in the C++ code. As a start, the R_assigner and Is_assigner code has been created using the same method from the python. To do this in C++, the variable of the matrix is declared using arma::mat from the armadillo library. The a variable is then assigned to the specific row and column using .row() and .col() functions. By using .print() function from the armadillo library, the elements of the matrix can then be checked for debugging purposes.
+
+After checking the elements inside the RHS and LHS matrix, it seems to be working properly. Now, to solve the x from the LHS and RHS matrices in Ax = b fashion where A is LHS and b is RHS, the solve() function from the armadillo library can be used. This uses the LU decomposition with optimized that is quite similar to the np.linalg.solve() function from python. This is tested by using a linear circuit which is also simulated in the LTSpice simulation as done before for the python code. The circuit that is used for this is shown below.
+
+![](circuit_test/C++/linear_test1.png)
+
+The results of this simulation on the C++ code and LTSpice can be seen below.
+
+![](circuit_test/Python/linear_test1_lts.png)
+
+LTSpice simulation
+
+![](circuit_test/C++/Cpp_linear_test1.png)
+
+C++ code simulation
+
+From both the solution, the nodal voltages and current shown are the same for both the C++ and LTSpice results. I have also added another linear circuit to test if it is working with other circuit arrangements. This is tested with the circuit shown below.
+
+![](circuit_test/C++/linear_test2.png)
+
+which gives the analysis results of
+
+![](circuit_test/Python/linear_test2_lts.png)
+
+LTSpice simulation
+
+![](circuit_test/C++/Cpp_linear_test2.png)
+
+C++ code simulation
+
+The x matrix can be seen to be solved using these methods. This solves for the linear part of the circuit with 100% accuracy. For the next goal, the diode with the Newton Raphson loop will be added to see if it is working for the non-linear circuit in the C++ code.
+
+# 14/11/2022
+
+The diode is added in the C++ code by using the Diode_assigner() function which takes in the modified nodal analysis stamp of the circuit. The Diode_assigner() function is called into the NewtonRaphson_system() function uses the same algorithm used from Tuma-Buermen Circuit Simulation book. This will make the loop to constantly add in the value of the LHS and RHS matrix which updates the solution matrix. This will then converge to reach the most accurate solution of the circuit matrices. As for a start, the maximum iteration chosen for this circuit is at 50 iterations to avoid any convergence error.
+
+The circuit chosen to test the newly added diode and non-linearity in this code is the wheatstone bridge circuit but the diodes and resistors have the opposite position. This circuit is shown below.
+
+![](circuit_test/Python/WB_circuit.png)
+
+The OP analysis of the circuit is then done by running on the C++ code and LTSpice simulator to see if the Newton Raphson algorithm and diode matrix stamp is working properly. The OP analysis results are shown below.
+
+![](circuit_test/Python/Nonlinear_test1.png)
+
+LTSpice circuit analysis
+
+![](circuit_test/C++/Diode_cpp.png)
+
+C++ code analysis
+
+The results are seen to have 97.538% accuracy for the OP analysis on the C++ code. The 2% error in the code could be due to the non-linearity of the diode. The circuit runs 35 iterations to reach the converging point of 1e-9 error of tolerance. Now, the voltage pulse can be added in the circuit for transient simulation loop. 
+
+## 15/11/2022
+
+To add the voltage pulse, since the RHS matrix is changed, a new int variable called V_locate is added to see the location of the pulse voltage to constantly update the value of the voltage in the RHS matrix. The voltage pulse settings is added the same way that it has been added in the python code before this. The transient loop is created using while loop starting from i = 0 until the amount of iterations, n, for the transient simulation with i being incremented once for each iteration. A time vector is also created to be used as the x-axis when plotted using python for the transient analysis. A function arange() has been created to update the time values in a vector by using for loop which adds the time with the timestep, h, until the end time.
+
+The voltage pulse is then added with the OP analysis results giving the initial condition for the Newton Raphson algorithm. The Newton Raphson algorithm is also called in the transient simulation loop to constantly update the init vector as the x matrix to be solved. From this, the dynamic, linear, and non-linear components can be linearised for the transient simulation to run. After running the test on the voltage pulse of the circuit and the code, both have the same results. Next, the dynamic elements which includes capacitance and the diode's capacitance can be added inside the matrix for more accurate results.
+
+The capacitor is added using the C_assigner function which has the same method as the predecessor in the python code. I have also added a DynamicNonLinear function which would add in the matrices of the capacitor stamp with the LHS and RHS to be solved in the Newton Raphson algorithm. Now, an RC circuit can be tested if it is working properly. The RC circuit that is going to be tested is shown below.
+
+![](circuit_test/Python/LT_transientdynamic.png)
+
+To plot the results, the init matrix is converted into csv file format with its respective nodal voltages and current that is going to be analysed. Since it is quite hard to plot in C++, the code that is used to plot the csv files is created using Python named as plot_reader.py. This uses the pandas, matplotlib and numpy libraries to ensure that a plot can be created perfectly.
+
+The results of the simulation from C++ code and LTSpice is then compared but there is an error which the shape of the C++ code graph is totally different. After the meeting with my supervisor, my supervisor had commented on the memory allocation system in C++ is different from Python. Due to this, we had discussed that the variable RHS and LHS that is being sent inside the function could be just a copy and the original variables are not changed during the Newton Raphson algorithm. Since the logic from the algorithm is actually to change the original variables of LHS and RHS, my supervisor had advised to denote the variable as an address to make it change permanently by adding an '&' in front of the variable.
+
+Another test has been made after doing these changes for both the LTSpice analysis and C++ code analysis. The results of the graph can be seen below.
+
+![](circuit_test/C++/CppPy_RCresult.png)
+
+C++ code RC analysis
+
+![](circuit_test/Python/Transient_dynamicnetwork.png)
+
+LTSpice RC analysis
+
+It can be seen that now the code has a similar result of transient analysis for the RC circuit with the LTSpice plot. Now, the diode's reactive part can be added inside the circuit code similar to the Python code.
+
+## 16/11/2022
+
+The diode's reactive part is the cd/h which is added in the Diode_assigner function for the LHS matrix. After adding this, the diode is then added inside the DynamicNonLinear function to be included for both OP analysis and transient analysis of the circuit. The circuit which includes the diode that will be used for analysis is shown below.
+
+![](circuit_test/Python/LT_dynamicDiodeNetwork.png)
+
+The LTSpice simulation and C++ code results is then compared to check how accurate the solution's graph is. The results are shown below.
+
+![](circuit_test/Python/sim_LTdiodedynamicnetwork.png)
+
+LTSpice simulation for diode RC network
+
+![](circuit_test/C++/iter_50_cpp.png)
+
+C++ code simulation for diode RC network
+
+As can be seen, the C++ code is quite similar to the LTSpice graph but there is a few minor oscillations around the initial time until around 0.03s. A speculation of mine is that since there is no timestep control, the non-linearity of the circuit made the initial values to oscillate further than it is supposed to. One way of fixing this is by referring back to the Tuma-Buermen textbook and see how it solves the convergence errors. From the textbook, is seems that Newton-Raphson method gives some different convergence levels due to the circuit's non-linearity. Due to this, it is advisable to set the iteration to around 8 and use a timestep control algorithm for the breakpoint of the convergence. 
+
+Since the initial limit for NR iterations was 50, I then changed it to 5 to see how well it would perform as to limit the convergence of the non-linear circuit. The transient analysis is then run and plotted using Python which is shwon on the graph below.
+
+![](circuit_test/C++/iter_5_cpp.png)
+
+C++ code simulation for diode RC network with 5 iterations limit
+
+It can be seen that it is significantly better with the final value being closer to the LTSpice circuit simulation. From this, it can be concluded that the circuit that was made is quite non-linear so the number of iterations should be limited to around 5. This would also be a good limit for iterations for any other non-linear circuit to be simulated using this C++ code.
+
+After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible.  
 
 
 
