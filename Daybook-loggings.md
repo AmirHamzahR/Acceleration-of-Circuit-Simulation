@@ -499,8 +499,17 @@ C++ code simulation for diode RC network with 5 iterations limit
 
 It can be seen that it is significantly better with the final value being closer to the LTSpice circuit simulation. From this, it can be concluded that the circuit that was made is quite non-linear so the number of iterations should be limited to around 5. This would also be a good limit for iterations for any other non-linear circuit to be simulated using this C++ code.
 
-After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible.  
+After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible. 
 
+## 21/11/2022
+
+Before adding the transistor into the circuit, the behaviour of a transistor inside a SPICE model must be first understood if it needs to be added either on the LHS or RHS matrix. This is done by looking into a study that relates the SPICE model using LTSPice and circuit theory on the [5th chapter](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The chapter discusses on how the transistor, in particular MOSFETs, contains large signal analysis which is used by the SPICE software to simulate and model a transistor in a circuit. An image of an N-MOS shown from the study is given below.
+
+![](NMOS_chapter5)
+
+The large signal analysis can be seen to be broken down into diodes, resistors and a Voltage Controlled Current Source (VCCS). The drain current, id, is seen to be outputted at the VCCS. The id is affected by the Vgs, Vds, and Vto which the relationship could be seen in the equations shown below.
+
+![](EQN_ID)
 
 
 
