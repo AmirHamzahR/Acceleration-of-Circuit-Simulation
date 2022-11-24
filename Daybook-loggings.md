@@ -511,5 +511,21 @@ The large signal analysis can be seen to be broken down into diodes, resistors a
 
 ![](EQN_ID)
 
+To simulate the large signal analysis, the VCCS matrix will be added as VCCS_assigner() in the code. From this, the VCCS and N-MOS will be able to be simulated in the circuit. 
+
+## 22/11/2022
+
+After having a meeting with Dr. Danial, we have concluded that the large signal analysis would be more accurate if it used from this [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml). The large signal analysis of the N-MOS can be seen as shown below. 
+
+![](NMOS_largesignalanal)
+
+We have also discussed that the VCCS for the vds and id should be changed to a normal current source first since the equation of the id has already included the Vgs, Vds, and Vto which by theory should be already enough to simulate the behaviour of a VCCS. For the first simulation, the lambda and Vto will be fixed while the Rds, Rd, Rg, and Rs will be set to values that will be large or small enough to not participate in the circuit equation. The target of simulating the MOSFET is to create a digital inverter simulation. One example is to simulate the transistor amplifier using a pulsed source. 
+
+To achieve this, the transistor will first be used as an analog switch for the signals. This works if the transistor could go on and off at certain time frames. The bias input will then be corrected to get a nice amplification. If that works, it will then be used as a digital inverter. After connecting the MOSFETs within each other, it could create a ring oscillator which enables it to go to sparse.
+
+Dr. Danial also suggested some improvements for the code. The init matrix needs to be renamed to solution to avoid confusion when solving for the transient plot. Before this, only the solution matrix is being saved to be plotted which mainly consists of nodal voltages. However, since the RHS matrix consist nodal currents that can be used to get the current of the components. This might need to be tested after the digital inverter has been finished as new matrices might need to be added if it does not work. 
+
+The vectors saved on the csv files also need to be changed to make it automatically update for all the analysed nodal voltages and currents. Lastly, to make the code more readable for users, the functions will be transferred to a .hpp file. For a start, the transistor will be first simulated to check if it will properly work with the current source assumption.
+
 
 
