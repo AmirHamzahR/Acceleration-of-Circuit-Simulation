@@ -505,11 +505,11 @@ After finishing the code, I have deleted the namespace declarations to avoid con
 
 Before adding the transistor into the circuit, the behaviour of a transistor inside a SPICE model must be first understood if it needs to be added either on the LHS or RHS matrix. This is done by looking into a study that relates the SPICE model using LTSPice and circuit theory on the [5th chapter](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The chapter discusses on how the transistor, in particular MOSFETs, contains large signal analysis which is used by the SPICE software to simulate and model a transistor in a circuit. An image of an N-MOS shown from the study is given below.
 
-![](NMOS_chapter5)
+![](circuit_test/C++/NMOS_chap5.png)
 
 The large signal analysis can be seen to be broken down into diodes, resistors and a Voltage Controlled Current Source (VCCS). The drain current, id, is seen to be outputted at the VCCS. The id is affected by the Vgs, Vds, and Vto which the relationship could be seen in the equations shown below.
 
-![](EQN_ID)
+![](circuit_test/C++/Equation_ID.png)
 
 To simulate the large signal analysis, the VCCS matrix will be added as VCCS_assigner() in the code. From this, the VCCS and N-MOS will be able to be simulated in the circuit. 
 
@@ -517,7 +517,7 @@ To simulate the large signal analysis, the VCCS matrix will be added as VCCS_ass
 
 After having a meeting with Dr. Danial, we have concluded that the large signal analysis would be more accurate if it used from this [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml). The large signal analysis of the N-MOS can be seen as shown below. 
 
-![](NMOS_largesignalanal)
+![](circuit_test/C++/NMOS_largesignalanal.png)
 
 We have also discussed that the VCCS for the vds and id should be changed to a normal current source first since the equation of the id has already included the Vgs, Vds, and Vto which by theory should be already enough to simulate the behaviour of a VCCS. For the first simulation, the lambda and Vto will be fixed while the Rds, Rd, Rg, and Rs will be set to values that will be large or small enough to not participate in the circuit equation. The target of simulating the MOSFET is to create a digital inverter simulation. One example is to simulate the transistor amplifier using a pulsed source. 
 
