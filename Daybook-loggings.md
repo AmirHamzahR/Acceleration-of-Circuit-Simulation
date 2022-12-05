@@ -499,8 +499,33 @@ C++ code simulation for diode RC network with 5 iterations limit
 
 It can be seen that it is significantly better with the final value being closer to the LTSpice circuit simulation. From this, it can be concluded that the circuit that was made is quite non-linear so the number of iterations should be limited to around 5. This would also be a good limit for iterations for any other non-linear circuit to be simulated using this C++ code.
 
-After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible.  
+After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible. 
 
+## 21/11/2022
+
+Before adding the transistor into the circuit, the behaviour of a transistor inside a SPICE model must be first understood if it needs to be added either on the LHS or RHS matrix. This is done by looking into a study that relates the SPICE model using LTSPice and circuit theory on the [5th chapter](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The chapter discusses on how the transistor, in particular MOSFETs, contains large signal analysis which is used by the SPICE software to simulate and model a transistor in a circuit. An image of an N-MOS shown from the study is given below.
+
+![](NMOS_chapter5)
+
+The large signal analysis can be seen to be broken down into diodes, resistors and a Voltage Controlled Current Source (VCCS). The drain current, id, is seen to be outputted at the VCCS. The id is affected by the Vgs, Vds, and Vto which the relationship could be seen in the equations shown below.
+
+![](EQN_ID)
+
+To simulate the large signal analysis, the VCCS matrix will be added as VCCS_assigner() in the code. From this, the VCCS and N-MOS will be able to be simulated in the circuit. 
+
+## 22/11/2022
+
+After having a meeting with Dr. Danial, we have concluded that the large signal analysis would be more accurate if it used from this [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml). The large signal analysis of the N-MOS can be seen as shown below. 
+
+![](NMOS_largesignalanal)
+
+We have also discussed that the VCCS for the vds and id should be changed to a normal current source first since the equation of the id has already included the Vgs, Vds, and Vto which by theory should be already enough to simulate the behaviour of a VCCS. For the first simulation, the lambda and Vto will be fixed while the Rds, Rd, Rg, and Rs will be set to values that will be large or small enough to not participate in the circuit equation. The target of simulating the MOSFET is to create a digital inverter simulation. One example is to simulate the transistor amplifier using a pulsed source. 
+
+To achieve this, the transistor will first be used as an analog switch for the signals. This works if the transistor could go on and off at certain time frames. The bias input will then be corrected to get a nice amplification. If that works, it will then be used as a digital inverter. After connecting the MOSFETs within each other, it could create a ring oscillator which enables it to go to sparse.
+
+Dr. Danial also suggested some improvements for the code. The init matrix needs to be renamed to solution to avoid confusion when solving for the transient plot. Before this, only the solution matrix is being saved to be plotted which mainly consists of nodal voltages. However, since the RHS matrix consist nodal currents that can be used to get the current of the components. This might need to be tested after the digital inverter has been finished as new matrices might need to be added if it does not work. 
+
+The vectors saved on the csv files also need to be changed to make it automatically update for all the analysed nodal voltages and currents. Lastly, to make the code more readable for users, the functions will be transferred to a .hpp file. For a start, the transistor will be first simulated to check if it will properly work with the current source assumption.
 
 
 
