@@ -531,7 +531,7 @@ The vectors saved on the csv files also need to be changed to make it automatica
 
 To test the large signal analysis model, a function called fet_assigner has been created in the Transient_code.py code. From this, the resistors, capacitors, and diodes seen from the large signal analysis is assigned to the fet by using R_assigner, C_assigner, and Diode_assigner respectively. For ease of code readability and efficiency, the R_assigner is edited to be similar in structure as has been made for the C++ code. This will only make the R_assigner to now output the New_LHS rather than just the delta LHS, a. From this, the components are added using the numbering given for the nodes. The numbering given for each nodes for the components can be seen below.
 
-![](nodes_numbered.png)
+![](circuit_test/Python/nodes_numbered.png)
 
 The total number of nodes can be seen to be 14 for one FET model. Due to this, the total number of nodes, T_nodes, must take into account this factor, so each fet model that is added in this code must add 14 so that the matrix could solve for each nodes given. If the model is too large, sparse solver from scipy in Python must be used for efficiency which goes the same for C++ code.
 
@@ -543,7 +543,7 @@ After some thought, the FET model that was made could only be created once using
 
 Upon finishing this, a circuit that contains an FET model can be simulated in this code. The sample circuit is taken from this [source](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The image of the circuit can be seen below.
 
-![](MOSFET_one.png)
+![](circuit_test/Python/MOSFET_one.png)
 
 For simiplicity sake, the body-effect of the transistor is neglected by connecting the subtrate node to the source node. The circuit is then simulated which then gives a singular matrix error. After checking the matrices, the error comes from the LHS matrix which is the conductance matrix. This means that there is a mistake when adding the component. However, I have not managed to found any solution for this error. It could be the way the solution values are added to the fet_assigner, but after checking it, the solution values are only added to the RHS matrix. The iteration of the Newton-Raphson algorithm for OP_analysis function is also just stuck at 0. This means that the loop was broken at the first iteration when the error occured. This means that the error is situated from the LHS matrix which needs to be checked.
 
