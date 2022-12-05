@@ -527,5 +527,25 @@ Dr. Danial also suggested some improvements for the code. The init matrix needs 
 
 The vectors saved on the csv files also need to be changed to make it automatically update for all the analysed nodal voltages and currents. Lastly, to make the code more readable for users, the functions will be transferred to a .hpp file. For a start, the transistor will be first simulated to check if it will properly work with the current source assumption.
 
+## 26/11/2022
+
+To test the large signal analysis model, a function called fet_assigner has been created in the Transient_code.py code. From this, the resistors, capacitors, and diodes seen from the large signal analysis is assigned to the fet by using R_assigner, C_assigner, and Diode_assigner respectively. For ease of code readability and efficiency, the R_assigner is edited to be similar in structure as has been made for the C++ code. This will only make the R_assigner to now output the New_LHS rather than just the delta LHS, a. From this, the components are added using the numbering given for the nodes. The numbering given for each nodes for the components can be seen below.
+
+![](nodes_numbered.png)
+
+The total number of nodes can be seen to be 14 for one FET model. Due to this, the total number of nodes, T_nodes, must take into account this factor, so each fet model that is added in this code must add 14 so that the matrix could solve for each nodes given. If the model is too large, sparse solver from scipy in Python must be used for efficiency which goes the same for C++ code.
+
+The voltage controlled current source, VCCS, is modeled just using a normal current source since the equation for ID has already been given. This is called an equation-defined current source. This will then enable the user to key-in their intended parameter of the components. At the end of the code, the LHS and RHS will then be updated for the Newton-Raphson iteration to solve since the FET model is a non-linear model. To use a linear model, a small-signal analysis of the FET can be used but this method is not applied for this code since it is contains inaccuracy from the bias values. 
+
+## 2/12/2022
+
+After some thought, the FET model that was made could only be created once using the nodes. To avoid this limitation, a for loop which takes in the ordering number of the MOSFET is created that will add 14 to each of the corresponded node. The numbering of the nodes is also based on the drain node since it is the starting node. An if-else function has been created if the drain node would ever be connected to the ground. The same goes for gate, source, and body (substrate) nodes which will have 0V. 
+
+Upon finishing this, a circuit that contains an FET model can be simulated in this code. The sample circuit is taken from this [source](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The image of the circuit can be seen below.
+
+![](MOSFET_one.png)
+
+For simiplicity sake, the body-effect of the transistor is neglected by connecting the subtrate node to the source node. The circuit is then simulated which then gives a singular matrix error. After checking the matrices, the error comes from the LHS matrix which is the conductance matrix. This means that there is a mistake when adding the component. However, I have not managed to found any solution for this error. It could be the way the solution values are added to the fet_assigner, but after checking it, the solution values are only added to the RHS matrix. The iteration of the Newton-Raphson algorithm for OP_analysis function is also just stuck at 0. This means that the loop was broken at the first iteration when the error occured. This means that the error is situated from the LHS matrix which needs to be checked.
+
 
 
