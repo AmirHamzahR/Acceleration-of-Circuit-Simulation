@@ -499,8 +499,53 @@ C++ code simulation for diode RC network with 5 iterations limit
 
 It can be seen that it is significantly better with the final value being closer to the LTSpice circuit simulation. From this, it can be concluded that the circuit that was made is quite non-linear so the number of iterations should be limited to around 5. This would also be a good limit for iterations for any other non-linear circuit to be simulated using this C++ code.
 
-After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible.  
+After finishing the code, I have deleted the namespace declarations to avoid confusion of different types and functions that are used in the code. The code has also then been tidied up which enables the user to easily add or delete components as they wish. The next step is to add in transistor and simulate it in this similar type of network. I am also planning to make a randomize circuit generator which includes resistor, capacitor, current source, pulsed voltage source, DC voltage source, diode, and transistor in the end of this code if it is possible. 
 
+## 21/11/2022
+
+Before adding the transistor into the circuit, the behaviour of a transistor inside a SPICE model must be first understood if it needs to be added either on the LHS or RHS matrix. This is done by looking into a study that relates the SPICE model using LTSPice and circuit theory on the [5th chapter](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The chapter discusses on how the transistor, in particular MOSFETs, contains large signal analysis which is used by the SPICE software to simulate and model a transistor in a circuit. An image of an N-MOS shown from the study is given below.
+
+![](circuit_test/C++/NMOS_chap5.png)
+
+The large signal analysis can be seen to be broken down into diodes, resistors and a Voltage Controlled Current Source (VCCS). The drain current, id, is seen to be outputted at the VCCS. The id is affected by the Vgs, Vds, and Vto which the relationship could be seen in the equations shown below.
+
+![](circuit_test/C++/Equation_ID.png)
+
+To simulate the large signal analysis, the VCCS matrix will be added as VCCS_assigner() in the code. From this, the VCCS and N-MOS will be able to be simulated in the circuit. 
+
+## 22/11/2022
+
+After having a meeting with Dr. Danial, we have concluded that the large signal analysis would be more accurate if it used from this [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml). The large signal analysis of the N-MOS can be seen as shown below. 
+
+![](circuit_test/C++/NMOS_largesignalanal.png)
+
+We have also discussed that the VCCS for the vds and id should be changed to a normal current source first since the equation of the id has already included the Vgs, Vds, and Vto which by theory should be already enough to simulate the behaviour of a VCCS. For the first simulation, the lambda and Vto will be fixed while the Rds, Rd, Rg, and Rs will be set to values that will be large or small enough to not participate in the circuit equation. The target of simulating the MOSFET is to create a digital inverter simulation. One example is to simulate the transistor amplifier using a pulsed source. 
+
+To achieve this, the transistor will first be used as an analog switch for the signals. This works if the transistor could go on and off at certain time frames. The bias input will then be corrected to get a nice amplification. If that works, it will then be used as a digital inverter. After connecting the MOSFETs within each other, it could create a ring oscillator which enables it to go to sparse.
+
+Dr. Danial also suggested some improvements for the code. The init matrix needs to be renamed to solution to avoid confusion when solving for the transient plot. Before this, only the solution matrix is being saved to be plotted which mainly consists of nodal voltages. However, since the RHS matrix consist nodal currents that can be used to get the current of the components. This might need to be tested after the digital inverter has been finished as new matrices might need to be added if it does not work. 
+
+The vectors saved on the csv files also need to be changed to make it automatically update for all the analysed nodal voltages and currents. Lastly, to make the code more readable for users, the functions will be transferred to a .hpp file. For a start, the transistor will be first simulated to check if it will properly work with the current source assumption.
+
+## 26/11/2022
+
+To test the large signal analysis model, a function called fet_assigner has been created in the Transient_code.py code. From this, the resistors, capacitors, and diodes seen from the large signal analysis is assigned to the fet by using R_assigner, C_assigner, and Diode_assigner respectively. For ease of code readability and efficiency, the R_assigner is edited to be similar in structure as has been made for the C++ code. This will only make the R_assigner to now output the New_LHS rather than just the delta LHS, a. From this, the components are added using the numbering given for the nodes. The numbering given for each nodes for the components can be seen below.
+
+![](circuit_test/Python/nodes_numbered.png)
+
+The total number of nodes can be seen to be 14 for one FET model. Due to this, the total number of nodes, T_nodes, must take into account this factor, so each fet model that is added in this code must add 14 so that the matrix could solve for each nodes given. If the model is too large, sparse solver from scipy in Python must be used for efficiency which goes the same for C++ code.
+
+The voltage controlled current source, VCCS, is modeled just using a normal current source since the equation for ID has already been given. This is called an equation-defined current source. This will then enable the user to key-in their intended parameter of the components. At the end of the code, the LHS and RHS will then be updated for the Newton-Raphson iteration to solve since the FET model is a non-linear model. To use a linear model, a small-signal analysis of the FET can be used but this method is not applied for this code since it is contains inaccuracy from the bias values. 
+
+## 2/12/2022
+
+After some thought, the FET model that was made could only be created once using the nodes. To avoid this limitation, a for loop which takes in the ordering number of the MOSFET is created that will add 14 to each of the corresponded node. The numbering of the nodes is also based on the drain node since it is the starting node. An if-else function has been created if the drain node would ever be connected to the ground. The same goes for gate, source, and body (substrate) nodes which will have 0V. 
+
+Upon finishing this, a circuit that contains an FET model can be simulated in this code. The sample circuit is taken from this [source](http://www.ece.mcgill.ca/~grober4/SPICE/SPICE_Decks/1st_Edition_LTSPICE/chapter5/Chapter%205%20MOSFETs%20web%20version.html). The image of the circuit can be seen below.
+
+![](circuit_test/Python/MOSFET_one.png)
+
+For simiplicity sake, the body-effect of the transistor is neglected by connecting the subtrate node to the source node. The circuit is then simulated which then gives a singular matrix error. After checking the matrices, the error comes from the LHS matrix which is the conductance matrix. This means that there is a mistake when adding the component. However, I have not managed to found any solution for this error. It could be the way the solution values are added to the fet_assigner, but after checking it, the solution values are only added to the RHS matrix. The iteration of the Newton-Raphson algorithm for OP_analysis function is also just stuck at 0. This means that the loop was broken at the first iteration when the error occured. This means that the error is situated from the LHS matrix which needs to be checked.
 
 
 
