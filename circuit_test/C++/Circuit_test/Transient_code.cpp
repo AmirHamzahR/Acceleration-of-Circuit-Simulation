@@ -20,7 +20,7 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Each NMOS added, adds 4 internal nodes. The other nodes can be added separately in the same equation. */
-int const T_nodes = 4 /*External nodes*/ + (4*2) /*NMOS (internal nodes)*/;
+int const T_nodes = 5 /*External nodes*/ + (4*3) /*NMOS (internal nodes)*/;
 
 #include "Transient_code.h"
 
@@ -33,9 +33,11 @@ int const T_nodes = 4 /*External nodes*/ + (4*2) /*NMOS (internal nodes)*/;
 
 // Assigning the stamp matrices for dynamic and non-linear components
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode){
+    // (Diode_assigner, fet_assigner, C_assigner)
     /*--------------------------------------------can be changed-------------------------------------------------*/
     fet_assigner(1, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
-    fet_assigner(2, 4, 4, 3, 0, h, solution, LHS, RHS, mode);
+    fet_assigner(2, 4, 4, 3, 3, h, solution, LHS, RHS, mode);
+    fet_assigner(3, 5, 5, 4, 4, h, solution, LHS, RHS, mode);
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
     
@@ -94,7 +96,7 @@ int main(int argc, const char ** argv){
     double tper = 4e-3;
 
     // Assigning DC voltage sources
-    Vs_assigner(4,0,5,LHS,RHS); // VDD
+    Vs_assigner(5,0,5,LHS,RHS); // VDD
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)

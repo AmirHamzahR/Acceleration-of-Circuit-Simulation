@@ -245,7 +245,7 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     double gds = 0;
     double gm = 0;
     double gmb = 0;
-    double W = 400e-6;
+    double W = 40e-6;
     double L = 10e-6;
     double Ld = 0;
     double Leff = L-2*Ld;
@@ -255,33 +255,37 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     
     double Beta = (mCox)*(W/Leff);
     double gamma = 0;
-    double phi = 0.6;
+    double phi = 0.65;
     double vt0 = 3;
     double vt = 0;
-    double I_DSeq = 0; 
-    // # the other settings for fet model based on the large signal analysis
+    double I_DSeq = 0;
+
+    double CGS = 4e-11 * W;
+    double CGD = 4e-11 * W;
+    double CGB = 2e-10 * W;
+    double CBD = 6e-17; // typical value for CBD
+    double CBS = 6e-17; // typical value for CBS
+
+    // # the settings for fet model based on the large signal analysis
     R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
     R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
-    R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
-    R_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+4,1e9,LHS,RHS); // # RDS
-    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,10e-14,0.05,2e-12,h,LHS,RHS,solution,mode); // # Diode BD
-    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,10e-14,0.05,2e-12,h,LHS,RHS,solution,mode); // # Diode BS
-
-    // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
-    C_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,6e-14,h,LHS,RHS,solution,mode); // # Capacitor BD
-    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+2,4e-11/*220e-12*/,h,LHS,RHS,solution,mode); // # Capacitor GD
-    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,4e-11/*220e-12*/,h,LHS,RHS,solution,mode); // # Capacitor GSO
-    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,2e-10/*700e-12*/,h,LHS,RHS,solution,mode); // # Capacitor GBO
-    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,6e-14,h,LHS,RHS,solution,mode); // # Capacitor BSO
+    R_assigner(T_nodes-(4*number)+3,node_vb,0.1,LHS,RHS); // # RB
+    R_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+4,1e6,LHS,RHS); // # RDS
+    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,10e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
+    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,10e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
     
+    // For the conductances
     if(vds>=0){
         vt = vt0 + gamma*((sqrt(phi-vbs)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     }else{
         vt = vt0 + gamma*((sqrt(phi-vbd)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     }
+
+    // For the capacitances
     
     if(vds>=0){
+    
         if ((vds < (vgs-vt))){ // # the transistor is in linear
             id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
             gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
@@ -320,6 +324,13 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
         }
         id = -id;
     }
+
+    // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
+    C_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,CBD,h,LHS,RHS,solution,mode); // # Capacitor BD
+    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+2,CGD,h,LHS,RHS,solution,mode); // # Capacitor GD
+    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
+    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
+    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
 
     I_DSeq = id - gm*vgs - gds*vds - gmb*vbs; // # 10.190 equation
     Is_assigner(node_vd,node_vs,I_DSeq,LHS,RHS);
@@ -435,7 +446,7 @@ arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RH
     error.row(0) = error_val;
     int iteration_counter = 0;
     arma::mat delta = arma::zeros(row_size,1);
-    while((error(0,0) > eps_val) && (iteration_counter < 6)){ // iteration counter can be changed depending on the non-linearity of the circuit
+    while((error(0,0) > eps_val) && (iteration_counter < 7)){ // iteration counter can be changed depending on the non-linearity of the circuit
         auto matrices = DynamicNonLinear(LHS,RHS,solution,h,mode);
         delta = arma::solve(matrices.first,(matrices.first*solution) - matrices.second);
         error.row(0) = arma::max(arma::abs(delta));
