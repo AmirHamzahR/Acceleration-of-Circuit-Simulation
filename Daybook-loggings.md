@@ -557,13 +557,13 @@ Currently, the MOSFET model is only hard-coded into the system with the exact no
 
 The nodes of the circuit is numbered as following.
 
-![](NMOS1)
+![](circuit_test/Python/NMOS_2.png)
 
 Since the nodes are hard-coded, it needs to be generic in order to add more MOSFETS into the system. There are many ways of making the code generic. I have thought of two methods which the first is by using the drain node as the reference which then adds in the number of internal nodes for the circuit to position the generic nodes. The other method is by using the number of total nodes outside of the circuit and substract it by the number of internal nodes which then adds with the position of the internal nodes. The latter seems to be working better with more MOSFETS by theory as it would not be affected if the drain node is grounded. As an example, the drain resistance, RD, node is numbered node_vd and T_nodes - (4*number) + 2, where the node_vd is drain node, number is the numbering of the MOSFET, and T_nodes is the total nodes for the circuit. Since the total nodes for the previous circuit is only 7 and the number of the MOSFET is 1, this would position the drain resistance on the 2 and 5 position. This can be seen to be correct as positioned in the image above. If more MOSFETS are added, the number variable would then be increased depending on the position of the MOSFETs.
 
 To test this out, the single MOSFET circuit will be tested again and the results will be seen which is compared with the LTSpice. The results of the plot is shown below.
 
-![](NMOS1_Cpp)
+![](circuit_test/Python/NMOS_similarLT.png)
 
 ![](NMOS1_LT)
 
