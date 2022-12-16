@@ -657,6 +657,47 @@ LTSpice simulation
 
 It can be seen that the C++ simulation has some convergence error which it does stops at 0.0016s but the stopping time is suppossed to be 12e-2s. The convergence is also quite high since it goes up to -15V for the 3rd nodal voltage. For the LTSpice simulation, the signal is running without any error so there must be something wrong within the C++ code. One problem could be due to the lack of timestep control of my code since 3 MOSFET could have high non-linearity which needs timestep control. 
 
+## 17/12/2022
+
+Dr Danial and I have discussed even further regarding the problems in the code which causes some convergence error. After some testings, we have decided to make the code hard-coded again for the FET assigner as there is some problems when certain values are added. This was done by commenting out the resistors, capacitors and diodes modeled inside the fet assigner which only leaves the id current equation. We have also used a better circuit for this which is shown below.
+
+![](NMOS4)
+
+This circuit was made in the simplest form without any internal nodes of the NMOS in the C++ code. After analysing which section of the code is wrong, it was discovered that the id equation during the linear region is slightly incorrect. Although it looked like it was correct from the mathematical standpoint, the C++ syntax has interpreted it wrongly. The wrong equation that has been corrected is shown below.
+
+![](wrongeqn)
+
+Wrong equation
+
+![](righteqn)
+
+Right equation
+
+After correcting this, analysis from LTSpice and C++ was done to check if the code is working properly compared to before. The result of the analysis is shown below.
+
+![](NMOS4_lt)
+
+LTSpice simulation for new NMOS circuit 
+
+![](NMOS4_cpp)
+
+C++ simulation for new NMOS circuit 
+
+Since it was working properly, the fet_assigner function can now be used automatically to add even more NMOS. This was tested by creating a 3 cascaded NMOS which is shown below.
+
+![](NMOS3)
+
+The simulation of LTSpice and C++ is then analysed to see if they are working properly as intended. The Vto is changed to 0.7V for stability purposes of the MOSFET.
+
+![](LTSpice_simul_NMOS3)
+
+LTSpice simulation of 3 NMOS circuit
+
+![](C++_simul_NMOS3)
+
+C++ simulation of 3 NMOS circuit
+
+The 3 NMOS circuit can be seen to work properly for the C++ code which means that more MOSFETs can be added to study the effect of sparse matrices in complex circuits for future purposes. The next target is to build a larger circuit for benchmarking of the C++ code.
 
 
 
