@@ -547,5 +547,92 @@ Upon finishing this, a circuit that contains an FET model can be simulated in th
 
 For simiplicity sake, the body-effect of the transistor is neglected by connecting the subtrate node to the source node. The circuit is then simulated which then gives a singular matrix error. After checking the matrices, the error comes from the LHS matrix which is the conductance matrix. This means that there is a mistake when adding the component. However, I have not managed to found any solution for this error. It could be the way the solution values are added to the fet_assigner, but after checking it, the solution values are only added to the RHS matrix. The iteration of the Newton-Raphson algorithm for OP_analysis function is also just stuck at 0. This means that the loop was broken at the first iteration when the error occured. This means that the error is situated from the LHS matrix which needs to be checked.
 
+## 8/12/2022
+
+After the meeting with my Dr Danial, we have concluded that the fet model was not the problem with the code but the structure of the code itself. After debugging throughout the code, there seems to be an addition on the RHS side of the circuit. It was actually after the OP analysis, the final LHS and RHS was being used again after running the Newton-Raphson iteration which adds in the value in the matrix. This is a faulty way of coding since the theory only needs the x matrix to be updated not the final LHS and RHS matrices. As a solution to this, the updated LHS and RHS was deleted and only the solution matrix was used for the transient analysis. After doing so, the id drain current source was working perfectly as intended. Dr Danial then advised to transfer the python code of the fet_assigner into the C++ code.
+
+Currently, the MOSFET model is only hard-coded into the system with the exact node numbering for the node. We have also used a more understandable NMOS circuit to be studied compared to the previous model from 2/12/2022. The image of the NMOS circuit can be seen below.
+
+![](NMOS_lt)
+
+The nodes of the circuit is numbered as following.
+
+![](NMOS1)
+
+Since the nodes are hard-coded, it needs to be generic in order to add more MOSFETS into the system. There are many ways of making the code generic. I have thought of two methods which the first is by using the drain node as the reference which then adds in the number of internal nodes for the circuit to position the generic nodes. The other method is by using the number of total nodes outside of the circuit and substract it by the number of internal nodes which then adds with the position of the internal nodes. The latter seems to be working better with more MOSFETS by theory as it would not be affected if the drain node is grounded. As an example, the drain resistance, RD, node is numbered node_vd and T_nodes - (4*number) + 2, where the node_vd is drain node, number is the numbering of the MOSFET, and T_nodes is the total nodes for the circuit. Since the total nodes for the previous circuit is only 7 and the number of the MOSFET is 1, this would position the drain resistance on the 2 and 5 position. This can be seen to be correct as positioned in the image above. If more MOSFETS are added, the number variable would then be increased depending on the position of the MOSFETs.
+
+To test this out, the single MOSFET circuit will be tested again and the results will be seen which is compared with the LTSpice. The results of the plot is shown below.
+
+![](NMOS1_Cpp)
+
+![](NMOS1_LT)
+
+It can be seen that it is working correctly for 1 MOSFET. To see if it really works if more MOSFETS are added, a bigger circuit will be used for testing that contains 2 NMOS.
+
+## 10/12/2022
+
+The new circuit for testing is shown below.
+
+![](NMOS2_figure)
+
+As can be seen the 2nd NMOS was added on the drain and gate source of the 1st NMOS. This simulates a cascaded NMOS circuit with 2 NMOS. From here, th T_nodes which includes the 2 internal nodes of the NMOS would be assigned as 4 (external nodes) + (4*2) internal nodes. The 4 of the internal nodes is the number of internal nodes while the 2 is the number of MOSFETs. This can be assigned for any amount of MOSFETs as long as the number of nodes is correct. The 2nd MOSFET would then be assigned as fet_assigner(2, 4, 4, 3, 0, h, solution, LHS, RHS, mode) as seen on the circuit diagram. However, the result of the LTSpice simulation is shown below.
+
+![](LT_NMOS2)
+
+However, when tested out, the C++ code does not show any 2nd nodal voltage for this simulation. This could be due to the wrong position of the nodes, the wrong assignments of the components, or even wrong theory from the book. After debugging continiuously with multiple simulations being made, the error was still there and it was not able to be solved.
+
+## 12/12/2022
+
+After researching thoroughly, the problem can be seen when the depletion error occurs. From the [technical papers study of circuit simulation](https://qucs.sourceforge.net/tech/technical.html) on page 145, it was stated that during VDS < 0, depletion mode occurs which the VBS, VGS, and VDS with be replaced with VBD, VGD, and -VDS respectively. The drain current Id would also be reversed. From this, I have extended the if-else statements for the cut-off, linear, and saturation region of the MOSFETs. After doing so, the simulation was getting better but it still fluctuates as if the non-linearity of the circuit was the issue. I have changed the number of iterations but the simulation still seems to be fluctuating at certain instances. I have also committed a few research regarding my assignment of the components and noticed that the Capacitor values are slightly different. 
+
+From this previous [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml), the parameters of CGDO, CGSO, and CGBO is given but there is no such capacitances in the large signal analysis circuit model. Those are actually just the capacitance overlapping of the ports which needs another equation to get the individual capacitances. After finding the explanation regarding the overlapping capacitance from this [video](https://www.youtube.com/watch?v=uGrK7P0EZHM), it seems that the default parameter of the overlapping capacitances need to multiply the width of the MOSFET. For example, CGSO = default value * W. After doing this, the simulation was made and recorded which is shown below.
+
+![](NMOS2_cpp)
+
+The simulation is now almost correct as the value goes up to 2V instead of 2.5V. After more debuggings, I have noticed that the position of the subtrate node should be the same as the source since that is how it is modeled in the LTSpice. This means that the fet_assigner should change from  fet_assigner(2, 4, 4, 3, 0, h, solution, LHS, RHS, mode) to fet_assigner(2, 4, 4, 3, 3, h, solution, LHS, RHS, mode). After doing so, a simulation of the following was obtained. 
+
+![](NMOS_perfect)
+
+From this, I can conclude that my NMOS fet_assigner function was working properly as the MOSFETs were added. 
+
+## 13/12/2022
+
+My code has been cleaned up for better user-readability which includes some explanations and tutorial on using the code by the comments, a header file for the C++ internal functions, and a better management system for the csv files. Rather than hard-coding each nodes to be plotted on the python plot_reader code, I have saved all the solution matrix into one csv file, time matrix into another, and an addition of MaxI variable to be used in the python code. 
+
+The plot_reader now consists of nodal_voltage function, Vs_current function and R_current function. The nodal voltage function can be easily used to obtain the nodal voltage of each node as shown in the python code which is similar to how a circuit simulator would plot each node when being called on. The Vs_current function has a slightly different method of assigning as it does not use the node numbering system but rather uses the voltage source. This must be assigned in the same order as how the voltage source has been assigned in the C++ code. The R_current function can also plot the current of the resistors which uses the normal V = IR formula to receive the current. All of these seems to be working as shown below.
+
+![](NMOS_perfect_cpp)
+
+![](NMOS2_LT)
+NMOS 
+![](NMOS2_curr_cpp)
+
+![](NMOS2_curr_LT)
+
+## 14/12/2022
+
+Upon achieving the 2 MOSFET assigner to be done perfectly, I have then tested the code with different circuits. One of which is by deleting the resistor on the 2nd and 3rd node to just simulate voltage sources and MOSFETs. The result of the C++ code simulation is then compared with LTSpice which is shown below.
+
+![](NMOS_withoutR_Cpp)
+![](NMOS_withoutR_Lt)
+
+It seems that the simulation is working perfectly even without the resistor. Now, I am going to test if the simulation will also be the same if the width of the MOSFETs is changed from 400u to 40u. The results of the simulation is shown below.
+
+![](NMOS_40u_Cpp)
+![](NMOS_40u_Lt)
+
+The results are also showing the same which is a green flag for the code. This means that I could go further and test it out with 3 MOSFETs. The circuit diagram of the 3 MOSFET is shown below.
+
+![](NMOS3)
+
+## 15/12/2022
+
+The circuit somehow does not show the same results as the one in the LTSpice. 
+
+
+
+
+
+
 
 
