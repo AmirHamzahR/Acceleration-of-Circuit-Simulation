@@ -661,39 +661,47 @@ It can be seen that the C++ simulation has some convergence error which it does 
 
 Dr Danial and I have discussed even further regarding the problems in the code which causes some convergence error. After some testings, we have decided to make the code hard-coded again for the FET assigner as there is some problems when certain values are added. This was done by commenting out the resistors, capacitors and diodes modeled inside the fet assigner which only leaves the id current equation. We have also used a better circuit for this which is shown below.
 
-![](NMOS4)
+![](circuit_test/C++/NMOS4.png)
 
-This circuit was made in the simplest form without any internal nodes of the NMOS in the C++ code. After analysing which section of the code is wrong, it was discovered that the id equation during the linear region is slightly incorrect. Although it looked like it was correct from the mathematical standpoint, the C++ syntax has interpreted it wrongly. The wrong equation that has been corrected is shown below.
+This circuit was made in the simplest form without any internal nodes of the NMOS in the C++ code. After analysing which section of the code is wrong, it was discovered that the id equation in fet_assigner during the linear region is slightly incorrect. Although it looked like it was correct from the mathematical standpoint, the C++ syntax has interpreted it wrongly. The wrong equation that has been corrected is shown below.
 
-![](wrongeqn)
+![](circuit_test/C++/Cpp_error_equation.png)
 
 Wrong equation
 
-![](righteqn)
+![](circuit_test/C++/Wrong_current.png)
+
+Wrong current
+
+![](circuit_test/C++/Cpp_correct_eqn.png)
 
 Right equation
 
+![](circuit_test/C++/Correct_current.png)
+
+Right current
+
 After correcting this, analysis from LTSpice and C++ was done to check if the code is working properly compared to before. The result of the analysis is shown below.
 
-![](NMOS4_lt)
+![](circuit_test/C++/NMOS3_lt_0.7.png)
 
 LTSpice simulation for new NMOS circuit 
 
-![](NMOS4_cpp)
+![](circuit_test/C++/NMOS3_cpp_perfect.png)
 
 C++ simulation for new NMOS circuit 
 
 Since it was working properly, the fet_assigner function can now be used automatically to add even more NMOS. This was tested by creating a 3 cascaded NMOS which is shown below.
 
-![](NMOS3)
+![](circuit_test/C++/NMOS3.png)
 
 The simulation of LTSpice and C++ is then analysed to see if they are working properly as intended. The Vto is changed to 0.7V for stability purposes of the MOSFET.
 
-![](LTSpice_simul_NMOS3)
+![](circuit_test/C++/NMOS3_lt_0.7.png)
 
 LTSpice simulation of 3 NMOS circuit
 
-![](C++_simul_NMOS3)
+![](circuit_test/C++/NMOS4_cpp.png)
 
 C++ simulation of 3 NMOS circuit
 
