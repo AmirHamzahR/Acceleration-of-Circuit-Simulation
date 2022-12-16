@@ -683,7 +683,7 @@ Right current
 
 After correcting this, analysis from LTSpice and C++ was done to check if the code is working properly compared to before. The result of the analysis is shown below.
 
-![](circuit_test/C++/NMOS3_lt_0.7.png)
+![](circuit_test/C++/NMOS4_lt.png)
 
 LTSpice simulation for new NMOS circuit 
 
