@@ -123,17 +123,22 @@ void R_assigner(double node_x, double node_y, double R, arma::mat &LHS, arma::ma
     else
         x = cond(R);
 
-    if(node_x == 0){
-        a.row(node_y-1).col(node_y-1) = x;
-    }
-    else if(node_y == 0){
-        a.row(node_x-1).col(node_x-1) = x;
+    if((node_x == 0) && (node_y == 0)){
+        x = 0;
     }
     else{
-        a.row(node_x-1).col(node_x-1) = x;
-        a.row(node_x-1).col(node_y-1) = -x;
-        a.row(node_y-1).col(node_x-1) = -x;
-        a.row(node_y-1).col(node_y-1) = x;
+        if(node_x == 0){
+            a.row(node_y-1).col(node_y-1) = x;
+        }
+        else if(node_y == 0){
+            a.row(node_x-1).col(node_x-1) = x;
+        }
+        else{
+            a.row(node_x-1).col(node_x-1) = x;
+            a.row(node_x-1).col(node_y-1) = -x;
+            a.row(node_y-1).col(node_x-1) = -x;
+            a.row(node_y-1).col(node_y-1) = x;
+        }
     }
     LHS = LHS + a;
 }
@@ -143,15 +148,20 @@ void Is_assigner(double node_x, double node_y, double I, arma::mat &LHS, arma::m
     int maxi = LHS.n_cols;
     int maxj = 1;
     arma::mat a = arma::zeros(maxi,maxj);
-    if(node_x == 0){
-        a.row(node_y-1).col(0) = I;
-    }
-    else if(node_y == 0){
-        a.row(node_x-1).col(0) = -I;
+    if((node_x == 0) && (node_y == 0)){
+        I = 0;
     }
     else{
-        a.row(node_x-1).col(0) = -I;
-        a.row(node_y-1).col(0) = I;
+        if(node_x == 0){
+            a.row(node_y-1).col(0) = I;
+        }
+        else if(node_y == 0){
+            a.row(node_x-1).col(0) = -I;
+        }
+        else{
+            a.row(node_x-1).col(0) = -I;
+            a.row(node_y-1).col(0) = I;
+        }
     }
     RHS = RHS + a;
 }
@@ -245,8 +255,8 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     double gds = 0;
     double gm = 0;
     double gmb = 0;
-    double W = 40e-6;
-    double L = 10e-6;
+    double W = 40e-6; // default is 100um
+    double L = 10e-6; // default is 100um
     double Ld = 0;
     double Leff = L-2*Ld;
     double kp = 200e-6;
@@ -256,13 +266,13 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     double Beta = (mCox)*(W/Leff);
     double gamma = 0;
     double phi = 0.65;
-    double vt0 = 3;
+    double vt0 = 0.7;
     double vt = 0;
     double I_DSeq = 0;
 
-    double CGS = 4e-11 * W;
-    double CGD = 4e-11 * W;
-    double CGB = 2e-10 * W;
+    double CGS = 4e-15 * W;
+    double CGD = 4e-15 * W;
+    double CGB = 4e-15 * W;
     double CBD = 6e-17; // typical value for CBD
     double CBS = 6e-17; // typical value for CBS
 
@@ -270,60 +280,57 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
     R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
-    R_assigner(T_nodes-(4*number)+3,node_vb,0.1,LHS,RHS); // # RB
-    R_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+4,1e6,LHS,RHS); // # RDS
+    R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,10e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,10e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
     
     // For the conductances
-    if(vds>=0){
+    // if(vds>=0){
         vt = vt0 + gamma*((sqrt(phi-vbs)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    }else{
-        vt = vt0 + gamma*((sqrt(phi-vbd)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    }
-
-    // For the capacitances
-    
-    if(vds>=0){
-    
-        if ((vds < (vgs-vt))){ // # the transistor is in linear
-            id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
-            gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
+    // }else{
+    //     vt = vt0 + gamma*((sqrt(phi-vbd)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
+    // }
+    // gm = Beta*vds;
+    // gds = Beta*(vgs-vt-vds);
+    // if(vds>=0){
+        if ((vds <= (vgs-vt)) && (vgs > vt)){ // # the transistor is in linear
+            id = Beta*(vgs-vt-vds/2)*vds*(1+LAMBDA*vds);
+            gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-vds/2);
             gm = Beta*(1+LAMBDA*vds)*vds;
             gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if ((vds > (vgs-vt)) && ((vgs-vt)>0)){ // # the transistor is in saturation
+        }else if ((vds > (vgs-vt)) && (vgs > vt)){ // # the transistor is in saturation
             id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
             gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
             gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
             gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if((vgs-vt)<0){ // # the transistor is in cutoff
+        }else{ // # the transistor is in cutoff
             id = 0;
             gds = 0;
             gm = 0;
             gmb = 0;
         }
-    }else{ // For depletion mode
-        vbs = vbd;
-        vgs = vgd;
-        vds = -vds;
-        if ((vds < (vgs-vt))){ // # the transistor is in linear
-            id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
-            gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
-            gm = Beta*(1+LAMBDA*vds)*vds;
-            gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if ((vds > (vgs-vt)) && ((vgs-vt)>0)){ // # the transistor is in saturation
-            id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
-            gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
-            gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
-            gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if((vgs-vt)<0){ // # the transistor is in cutoff
-            id = 0;
-            gds = 0;
-            gm = 0;
-            gmb = 0;
-        }
-        id = -id;
-    }
+    // }else{ // For depletion mode
+    //     vbs = vbd;
+    //     vgs = vgd;
+    //     vds = -vds;
+    //     if ((vds < (vgs-vt))){ // # the transistor is in linear
+    //         id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
+    //         gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
+    //         gm = Beta*(1+LAMBDA*vds)*vds;
+    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
+    //     }else if ((vds > (vgs-vt)) && ((vgs-vt)>0)){ // # the transistor is in saturation
+    //         id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
+    //         gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
+    //         gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
+    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
+    //     }else if((vgs-vt)<0){ // # the transistor is in cutoff
+    //         id = 0;
+    //         gds = 0;
+    //         gm = 0;
+    //         gmb = 0;
+    //     }
+    //     id = -id;
+    // }
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
     C_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,CBD,h,LHS,RHS,solution,mode); // # Capacitor BD
@@ -332,7 +339,8 @@ void fet_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
     C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
 
-    I_DSeq = id - gm*vgs - gds*vds - gmb*vbs; // # 10.190 equation
+    I_DSeq = id - gds*vds - gm*vgs - gmb*vbs/*/*  /**/; // # 10.190 equation
+    // Is_assigner(node_vs,node_vd,id,LHS,RHS);
     Is_assigner(node_vd,node_vs,I_DSeq,LHS,RHS);
     VCCS_assigner(node_vd,node_vs,node_vb,node_vs,gmb,LHS); // assigning gmb
     R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
@@ -410,8 +418,21 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
     double x = 0;
     double x1 = 0;
     double x2 = 0;
-    double val_nodex = solution(node_x-1,0);
-    double val_nodey = solution(node_y-1,0);
+    double val_nodex = 0;
+    double val_nodey = 0;
+
+    if((node_x == 0)){
+        val_nodex = 0;
+    }else{
+        val_nodex = solution(node_x-1,0);
+    }
+
+    if((node_y == 0)){
+        val_nodey = 0;
+    }else{
+        val_nodey = solution(node_y-1,0);
+    }
+    
 
     if(mode == 0){
         cd = 0;
