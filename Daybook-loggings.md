@@ -553,7 +553,7 @@ After the meeting with my Dr Danial, we have concluded that the fet model was no
 
 Currently, the MOSFET model is only hard-coded into the system with the exact node numbering for the node. We have also used a more understandable NMOS circuit to be studied compared to the previous model from 2/12/2022. The image of the NMOS circuit can be seen below.
 
-![](NMOS_lt)
+![](NMOS_LT)
 
 The nodes of the circuit is numbered as following.
 
@@ -573,11 +573,11 @@ It can be seen that it is working correctly for 1 MOSFET. To see if it really wo
 
 The new circuit for testing is shown below.
 
-![](NMOS2_figure)
+![](circuit_test/C++/NMOS2.png)
 
 As can be seen the 2nd NMOS was added on the drain and gate source of the 1st NMOS. This simulates a cascaded NMOS circuit with 2 NMOS. From here, th T_nodes which includes the 2 internal nodes of the NMOS would be assigned as 4 (external nodes) + (4*2) internal nodes. The 4 of the internal nodes is the number of internal nodes while the 2 is the number of MOSFETs. This can be assigned for any amount of MOSFETs as long as the number of nodes is correct. The 2nd MOSFET would then be assigned as fet_assigner(2, 4, 4, 3, 0, h, solution, LHS, RHS, mode) as seen on the circuit diagram. However, the result of the LTSpice simulation is shown below.
 
-![](LT_NMOS2)
+![](circuit_test/C++/LTSpice_NMOS2.png)
 
 However, when tested out, the C++ code does not show any 2nd nodal voltage for this simulation. This could be due to the wrong position of the nodes, the wrong assignments of the components, or even wrong theory from the book. After debugging continiuously with multiple simulations being made, the error was still there and it was not able to be solved.
 
@@ -587,11 +587,11 @@ After researching thoroughly, the problem can be seen when the depletion error o
 
 From this previous [source](https://www.oreilly.com/library/view/rf-power-amplifier/9781118844342/bapp01.xhtml), the parameters of CGDO, CGSO, and CGBO is given but there is no such capacitances in the large signal analysis circuit model. Those are actually just the capacitance overlapping of the ports which needs another equation to get the individual capacitances. After finding the explanation regarding the overlapping capacitance from this [video](https://www.youtube.com/watch?v=uGrK7P0EZHM), it seems that the default parameter of the overlapping capacitances need to multiply the width of the MOSFET. For example, CGSO = default value * W. After doing this, the simulation was made and recorded which is shown below.
 
-![](NMOS2_cpp)
+![](circuit_test/C++/less_perfectnmos_5_iter_cpp.png)
 
 The simulation is now almost correct as the value goes up to 2V instead of 2.5V. After more debuggings, I have noticed that the position of the subtrate node should be the same as the source since that is how it is modeled in the LTSpice. This means that the fet_assigner should change from  fet_assigner(2, 4, 4, 3, 0, h, solution, LHS, RHS, mode) to fet_assigner(2, 4, 4, 3, 3, h, solution, LHS, RHS, mode). After doing so, a simulation of the following was obtained. 
 
-![](NMOS_perfect)
+![](circuit_test/C++/perfect_nmos_cpp.png)
 
 From this, I can conclude that my NMOS fet_assigner function was working properly as the MOSFETs were added. 
 
@@ -601,33 +601,63 @@ My code has been cleaned up for better user-readability which includes some expl
 
 The plot_reader now consists of nodal_voltage function, Vs_current function and R_current function. The nodal voltage function can be easily used to obtain the nodal voltage of each node as shown in the python code which is similar to how a circuit simulator would plot each node when being called on. The Vs_current function has a slightly different method of assigning as it does not use the node numbering system but rather uses the voltage source. This must be assigned in the same order as how the voltage source has been assigned in the C++ code. The R_current function can also plot the current of the resistors which uses the normal V = IR formula to receive the current. All of these seems to be working as shown below.
 
-![](NMOS_perfect_cpp)
+![](circuit_test/C++/perfect_nmos_cpp.png)
 
-![](NMOS2_LT)
-NMOS 
-![](NMOS2_curr_cpp)
+2 NMOS circuit from C++ simulation for nodal voltages
+
+![](circuit_test/C++/LTSpice_NMOS2.png)
+
+2 NMOS circuit from LTSpice simulation for nodal voltages
+
+![](circuit_test/C++/CurrNMOS_cpp.png)
+
+2 NMOS circuit from C++ simulation for current of voltage sources
 
 ![](NMOS2_curr_LT)
+
+2 NMOS circuit from LTSpice simulation for current of voltage sources
 
 ## 14/12/2022
 
 Upon achieving the 2 MOSFET assigner to be done perfectly, I have then tested the code with different circuits. One of which is by deleting the resistor on the 2nd and 3rd node to just simulate voltage sources and MOSFETs. The result of the C++ code simulation is then compared with LTSpice which is shown below.
 
-![](NMOS_withoutR_Cpp)
-![](NMOS_withoutR_Lt)
+![](circuit_test/C++/NMOS_withoutR_cpp.png)
+
+2 NMOS circuit without 1k ohm resistor from C++ simulation for nodal voltages
+
+![](circuit_test/C++/NMOS_withoutR_lt.png)
+
+2 NMOS circuit without 1k ohm resistor from LTSpice simulation for nodal voltages 
 
 It seems that the simulation is working perfectly even without the resistor. Now, I am going to test if the simulation will also be the same if the width of the MOSFETs is changed from 400u to 40u. The results of the simulation is shown below.
 
-![](NMOS_40u_Cpp)
-![](NMOS_40u_Lt)
+![](circuit_test/C++/NMOS2_40u_cpp.png)
+
+C++ simulation
+
+![](circuit_test/C++/NMOS2_40u_lt.png)
+
+LTSpice simulation
 
 The results are also showing the same which is a green flag for the code. This means that I could go further and test it out with 3 MOSFETs. The circuit diagram of the 3 MOSFET is shown below.
 
-![](NMOS3)
+![](circuit_test/C++/NMOS3.png)
 
 ## 15/12/2022
 
-The circuit somehow does not show the same results as the one in the LTSpice. 
+The circuit somehow does not show the same results as the one in the LTSpice. The comparison of the results can be seen below.
+
+![](circuit_test/C++/NMOS3_cpp.png)
+
+C++ simulation
+
+![](circuit_test/C++/NMOS3_lt.png)
+
+LTSpice simulation
+
+It can be seen that the C++ simulation has some convergence error which it does stops at 0.0016s but the stopping time is suppossed to be 12e-2s. The convergence is also quite high since it goes up to -15V for the 3rd nodal voltage. For the LTSpice simulation, the signal is running without any error so there must be something wrong within the C++ code. One problem could be due to the lack of timestep control of my code since 3 MOSFET could have high non-linearity which needs timestep control. 
+
+
 
 
 
