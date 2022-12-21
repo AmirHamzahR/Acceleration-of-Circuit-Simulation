@@ -707,7 +707,35 @@ C++ simulation of 3 NMOS circuit
 
 The 3 NMOS circuit can be seen to work properly for the C++ code which means that more MOSFETs can be added to study the effect of sparse matrices in complex circuits for future purposes. The next target is to build a larger circuit for benchmarking of the C++ code.
 
+## 21/12/2022
 
+After finishing up with the NMOS, Dr Danial had advised to add in PMOS which enables us to study a ring oscillator circuit. The PMOS is completely similar to the NMOS but it is opposite in terms of voltages and even the current direction. There are 4 methods of adding the PMOS which is studied from [here](https://inst.eecs.berkeley.edu/~ee105/sp08/discussions/pmos). I have tried all the methods of adding the PMOS, and method C seems to work best with my code. The way that the PMOS was added is made using the NMOS function but then the voltages are inverted with the position of the nodes are also the opposite when assigning the current sources and VCCS's. An example is that when the NMOS is assigned from drain node to source node, for the PMOS it is from source node to drain node. The equation of the id, gm, gds, and gmb are also the same from the NMOS except that vt is now substitute by negative vt, n_vt. 
+
+To test this out, a simple PMOS circuit was created with a triangle pulse that goes from 0 to -5 on the gate node. The circuit is shown below.
+
+![](circuit_test/C++/PMOS.png)
+
+This circuit is then simulated by using the C++ code and compared to the LTSpice analysis. The PMOS_assigner function uses the same format as the NMOS except that the source node and drain node is switched. So from the circuit, it will be PMOS_assigner(number=1,source_node=2,gate_node=1,drain_node=0,bulk_node=0). For simplicity purposes, the body effect is eliminated by connecting the drain and bulk node together. The PMOS model also has the default parameters for both C++ and LTSpice. From this, the simulation can be done and the results are shown below. 
+
+![](circuit_test/C++/pmos_lt.png)
+
+LTSpice simulation for simple pmos circuit
+
+![](circuit_test/C++/pmos_cpp.png)
+
+C++ simulation for simple pmos circuit
+
+It can be seen that both circuit shows a similar shape of the graph. To analyse this better, the 2nd nodal voltage will be zoomed and compared with each other to see if the simulation is accurate.
+
+![](circuit_test/C++/pmos_lt_zoomed_2.png)
+
+LTSpice 2nd nodal voltage simulation for simple pmos circuit
+
+![](circuit_test/C++/pmos_cpp_zoomed_2.png)
+
+C++ 2nd nodal voltage simulation for simple pmos circuit
+
+Both the simulation have the same results with almost 100% accuracy. The simulation is a success which paves the way in creating a ring oscillator for benchmarking purposes.
 
 
 
