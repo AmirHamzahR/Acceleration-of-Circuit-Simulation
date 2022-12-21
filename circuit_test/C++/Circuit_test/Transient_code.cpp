@@ -20,7 +20,7 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Each NMOS added, adds 4 internal nodes. The other nodes can be added separately in the same equation. */
-int const T_nodes = 5 /*External nodes*/ + 4*3 /*NMOS (internal nodes)*/;
+int const T_nodes = 3 /*External nodes*/ + 4*0 /*NMOS (internal nodes)*/ + 4*1 /*PMOS (internal nodes)*/;
 
 #include "Transient_code.h"
 
@@ -35,9 +35,7 @@ int const T_nodes = 5 /*External nodes*/ + 4*3 /*NMOS (internal nodes)*/;
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode){
     // (Diode_assigner, fet_assigner, C_assigner)
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    fet_assigner(1, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
-    fet_assigner(2, 4, 4, 3, 3, h, solution, LHS, RHS, mode);
-    fet_assigner(3, 5, 5, 4, 4, h, solution, LHS, RHS, mode);
+    PMOS_assigner(1, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
     
@@ -60,7 +58,7 @@ int main(int argc, const char ** argv){
     // Defining the Time and Timestep for Transient Simulation
     arma::mat X1 = arma::ones(n,1);
     double t_start = 0;
-    double t_end = 12e-2;
+    double t_end = 20e-3;
     double t = t_end - t_start;
     double h = t/(n-1);
     std::cout << h << "\n";
@@ -88,16 +86,16 @@ int main(int argc, const char ** argv){
     // Pulse voltage settings
     double t1 = 0; // time used for the loop
     double V1 = 0;
-    double V2 = 5;
+    double V2 = -5;
     double td = 1e-3;
     double tr = 1e-3;
     double tf = 1e-3;
-    double tpw = 2e-3;
-    double tper = 4e-3;
+    double tpw = 0;
+    double tper = 2e-3;
 
     // Assigning DC voltage sources
     // Vs_assigner(1,0,2,LHS,RHS); // VDD
-    Vs_assigner(5,0,5,LHS,RHS); 
+    Vs_assigner(3,0,-0.5,LHS,RHS);
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)
