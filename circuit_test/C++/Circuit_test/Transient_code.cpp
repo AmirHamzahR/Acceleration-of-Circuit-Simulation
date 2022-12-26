@@ -9,7 +9,8 @@
     5) Voltage Source - Vs_assigner(node_x, node_y, V_value, LHS, RHS);
     6) VCCS - VCCS_assigner(node_x, node_y, node_cx, node_cy, R, LHS);
     7) Pulsed Voltage Source - V_pulse(V1, V2, t1, td, tr, tf, tpw, tper, h);
-    8) N-MOS Transistor - fet_assigner(number, node_vd, node_vg, node_vs, node_vb, h, solution, LHS, RHS, mode); (currently maximum of 2 transistors)
+    8) N-MOS Transistor - NMOS_assigner(number, node_vd, node_vg, node_vs, node_vb, h, solution, LHS, RHS, mode);
+    9) P-MOS Transistor - PMOS_assigner(number, node_vs, node_vg, node_vd, node_vb, h, solution, LHS, RHS, mode);
 
     The linear components could be assigned inside the main function while the non-linear and dynamic components can be assigned inside the DynamicNonLinear function.
 
@@ -20,7 +21,7 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Each NMOS added, adds 4 internal nodes. The other nodes can be added separately in the same equation. */
-int const T_nodes = 3 /*External nodes*/ + 4*0 /*NMOS (internal nodes)*/ + 4*1 /*PMOS (internal nodes)*/;
+int const T_nodes = 3 /*External nodes*/ + 4*2 /* No. of MOSFETs (internal nodes)*/;
 
 #include "Transient_code.h"
 
@@ -33,9 +34,12 @@ int const T_nodes = 3 /*External nodes*/ + 4*0 /*NMOS (internal nodes)*/ + 4*1 /
 
 // Assigning the stamp matrices for dynamic and non-linear components
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode){
-    // (Diode_assigner, fet_assigner, C_assigner)
+    // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner)
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    PMOS_assigner(1, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
+    
+    PMOS_assigner(1, 3, 1, 2, 2, h, solution, LHS, RHS, mode);
+    NMOS_assigner(2, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
+    
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
     
@@ -74,7 +78,7 @@ int main(int argc, const char ** argv){
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE RESISTOR STAMP (R_assigner)
-    R_assigner(3,2,1e3,LHS,RHS);
+    // R_assigner(2,0,1e6,LHS,RHS);
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE CURRENT STAMP (Is_assigner, VCCS_assigner)
@@ -86,7 +90,7 @@ int main(int argc, const char ** argv){
     // Pulse voltage settings
     double t1 = 0; // time used for the loop
     double V1 = 0;
-    double V2 = -5;
+    double V2 = 5;
     double td = 1e-3;
     double tr = 1e-3;
     double tf = 1e-3;
@@ -95,7 +99,7 @@ int main(int argc, const char ** argv){
 
     // Assigning DC voltage sources
     // Vs_assigner(1,0,2,LHS,RHS); // VDD
-    Vs_assigner(3,0,-0.5,LHS,RHS);
+    Vs_assigner(3,0,4,LHS,RHS);
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)

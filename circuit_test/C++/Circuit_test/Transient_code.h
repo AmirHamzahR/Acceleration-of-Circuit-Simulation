@@ -255,24 +255,27 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double gds = 0;
     double gm = 0;
     double gmb = 0;
-    double W = 40e-6; // default is 100um
-    double L = 10e-6; // default is 100um
+    double W = 100e-6; // default is 100um
+    double L = 100e-6; // default is 100um
     double Ld = 0;
     double Leff = L-2*Ld;
-    double kp = 200e-6;
+    double kp = 2e-5; // default is 2e-5
     double mCox = kp;
     double LAMBDA = 0;
     
     double Beta = (mCox)*(W/Leff);
     double gamma = 0;
     double phi = 0.65;
-    double vt0 = 0.7;
+    double vt0 = 0; // default is 0
     double vt = 0;
     double I_DSeq = 0;
 
-    double CGS = 4e-15 * W;
-    double CGD = 4e-15 * W;
-    double CGB = 4e-15 * W;
+    double CGSO = 4e-15;
+    double CGDO = 4e-15;
+    double CGBO = 4e-15;
+    double CGS = CGSO * W;
+    double CGD = CGDO * W;
+    double CGB = CGBO * W;
     double CBD = 6e-17; // typical value for CBD
     double CBS = 6e-17; // typical value for CBS
 
@@ -282,7 +285,7 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
-    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
+    Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
     
     // For the conductances
     // if(vds>=0){
@@ -293,12 +296,12 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     // gm = Beta*vds;
     // gds = Beta*(vgs-vt-vds);
     // if(vds>=0){
-        if ((vds <= (vgs-vt)) && (vgs > vt)){ // # the transistor is in linear
+        if ((vds <= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in linear
             id = Beta*(vgs-vt-vds/2)*vds*(1+LAMBDA*vds);
             gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-vds/2);
             gm = Beta*(1+LAMBDA*vds)*vds;
             gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if ((vds > (vgs-vt)) && (vgs > vt)){ // # the transistor is in saturation
+        }else if ((vds >= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in saturation
             id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
             gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
             gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
@@ -333,8 +336,6 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     // }
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
-    C_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,CBD,h,LHS,RHS,solution,mode); // # Capacitor BD
-    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+2,CGD,h,LHS,RHS,solution,mode); // # Capacitor GD
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
     C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
@@ -377,13 +378,18 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
         vb = 0;
     }else
         vb = solution(node_vb-1,0);
+
+    // enhancement mode voltages
+    double vgs = vg - vs;
+    double vds = vd - vs;
+    double vbs = vb - vs;
     // enhancement mode voltages
     double vsg = vs - vg;
     double vsd = vs - vd;
     double vsb = vs - vb;
     // depletion mode voltages
-    double vbd = vb - vd;
-    double vgd = vg - vd;
+    double vdb = vd - vb;
+    double vdg = vd - vg;
 
 
     double id = 0;
@@ -405,11 +411,14 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double vt = 0;
     double I_DSeq = 0;
 
-    double CGS = 4e-15 * W;
-    double CGD = 4e-15 * W;
-    double CGB = 4e-15 * W;
-    double CBD = 6e-17; // typical value for CBD
-    double CBS = 6e-17; // typical value for CBS
+    double CGSO = 4e-15;
+    double CGDO = 4e-15;
+    double CGBO = 4e-15;
+    double CGS = CGSO * W;
+    double CGD = CGDO * W;
+    double CGB = CGBO * W;
+    double CBD = 6e-17; // 6e-17 typical value for CBD
+    double CBS = 6e-17; // 6e-17 typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
     R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
@@ -419,72 +428,68 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     Diode_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
     
-    // For the conductances
-    // if(vds>=0){
+    // If vds>=0, then the transistor is in enhancement mode, otherwise it is in depletion mode
+    // if(vsd>=0){
         vt = vt0 - gamma*((sqrt(phi-vsb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     // }else{
-    //     vt = vt0 + gamma*((sqrt(phi-vbd)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
+    //     vt = vt0 + gamma*((sqrt(phi-vdb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     // }
-    // gm = Beta*vds;
-    // gds = Beta*(vgs-vt-vds);
-    // if(vds>=0){
+    
     double n_vt = -vt;
-        if ((vsd <= (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in linear
-            id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
-            gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
-            gm = Beta*(1+LAMBDA*vsd)*vsd;
-            gmb = gm*gamma/(2*sqrt(phi-vsb));
-        }else if ((vsd > (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in saturation
-            id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
-            gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
-            gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
-            gmb = gm*gamma/(2*sqrt(phi-vsb));
-        }else{ // # the transistor is in cutoff
-            id = 0;
-            gds = 0;
-            gm = 0;
-            gmb = 0;
-        }
+    // if (vsd >= 0){
+            if ((vsd >= (vsg-n_vt)) && (vsg >= n_vt)){ // # the transistor is in saturation
+                id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
+                gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
+                gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
+                gmb = gm*gamma/(2*sqrt(phi-vsb));
+            }else  if ((vsd <= (vsd-n_vt)) && (vsg >= n_vt)){ // # the transistor is in linear
+                id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
+                gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
+                gm = Beta*(1+LAMBDA*vsd)*vsd;
+                gmb = gm*gamma/(2*sqrt(phi-vsb));
+            }else{ // # the transistor is in cutoff
+                id = 0;
+                gds = 0;
+                gm = 0;
+                gmb = 0;
+            }
     // }else{ // For depletion mode
-    //     vbs = vbd;
-    //     vgs = vgd;
-    //     vds = -vds;
-    //     if ((vds < (vgs-vt))){ // # the transistor is in linear
-    //         id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
-    //         gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
-    //         gm = Beta*(1+LAMBDA*vds)*vds;
-    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
-    //     }else if ((vds > (vgs-vt)) && ((vgs-vt)>0)){ // # the transistor is in saturation
-    //         id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
-    //         gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
-    //         gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
-    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
-    //     }else if((vgs-vt)<0){ // # the transistor is in cutoff
-    //         id = 0;
-    //         gds = 0;
-    //         gm = 0;
-    //         gmb = 0;
+    //     vsb = vdb;
+    //     vsg = vdg;
+    //     vsd = -vsd;
+    //     if ((vsd <= (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in linear
+    //             id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
+    //             gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
+    //             gm = Beta*(1+LAMBDA*vsd)*vsd;
+    //             gmb = gm*gamma/(2*sqrt(phi-vsb));
+    //         }else if ((vsd > (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in saturation
+    //             id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
+    //             gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
+    //             gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
+    //             gmb = gm*gamma/(2*sqrt(phi-vsb));
+    //         }else{ // # the transistor is in cutoff
+    //             id = 0;
+    //             gds = 0;
+    //             gm = 0;
+    //             gmb = 0;
     //     }
     //     id = -id;
     // }
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
-    C_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,CBD,h,LHS,RHS,solution,mode); // # Capacitor BD
-    C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+2,CGD,h,LHS,RHS,solution,mode); // # Capacitor GD
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
     C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
 
-    
-    // I_DSeq = id - gds*abs(vds) - gm*abs(vgs) - gmb*vbs/*/*  /**/;
-    I_DSeq = id - gds*vsd - gm*vsg - gmb*vsb; // # 10.190 equation
+    I_DSeq = id - gds*vsd - gm*vsg - gmb*vsb;
 
-    // Is_assigner(node_vs,node_vd,id,LHS,RHS);
     Is_assigner(node_vs,node_vd,I_DSeq,LHS,RHS);
-    VCCS_assigner(node_vs,node_vd,node_vs,node_vb,gmb,LHS); // assigning gmb
-    R_assigner(node_vs,node_vd,cond(gds),LHS,RHS); // # assigning gds
-    VCCS_assigner(node_vs,node_vd,node_vs,node_vg,gm,LHS); // # assigning gm
+    VCCS_assigner(node_vd,node_vs,node_vb,node_vs,gmb,LHS); // assigning gmb
+    R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
+    VCCS_assigner(node_vd,node_vs,node_vg,node_vs,gm,LHS); // # assigning gm
 }
+
+
 
 // Voltage source stamp assigner
 double Vs_assigner(int node_x, int node_y, double V_value, arma::mat &LHS, arma::mat &RHS){
@@ -560,24 +565,17 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
     double val_nodex = 0;
     double val_nodey = 0;
 
-    if((node_x == 0)){
-        val_nodex = 0;
-    }else{
-        val_nodex = solution(node_x-1,0);
-    }
-
-    if((node_y == 0)){
-        val_nodey = 0;
-    }else{
-        val_nodey = solution(node_y-1,0);
-    }
     
 
     if(mode == 0){
         cd = 0;
     }
 
-    if(node_x == 0){
+    if((node_x == 0 && node_y == 0)){
+        x = 0;
+        x1 = 0;
+    }
+    else if(node_x == 0){
         x = (Is/VT)*(exp(-val_nodey/VT)) + cd/h;
         x1 = (x*(-val_nodey)-Is*(exp((-val_nodey)/VT)-1));
     }
@@ -606,7 +604,7 @@ arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RH
     error.row(0) = error_val;
     int iteration_counter = 0;
     arma::mat delta = arma::zeros(row_size,1);
-    while((error(0,0) > eps_val) && (iteration_counter < 7)){ // iteration counter can be changed depending on the non-linearity of the circuit
+    while((error(0,0) > eps_val) && (iteration_counter < 4)){ // iteration counter can be changed depending on the non-linearity of the circuit
         auto matrices = DynamicNonLinear(LHS,RHS,solution,h,mode);
         delta = arma::solve(matrices.first,(matrices.first*solution) - matrices.second);
         error.row(0) = arma::max(arma::abs(delta));

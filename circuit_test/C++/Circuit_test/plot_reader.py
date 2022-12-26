@@ -16,7 +16,7 @@ def nodal_voltage(node_read):
     n_iter = 0
     for i in range(0,(len(time1))):
         
-        new_solution[i] = solution[n_iter+(node_read-1)]
+        new_solution[i] = solution[n_iter+(node_read)-1]
         n_iter += Maxi
         
     return new_solution
