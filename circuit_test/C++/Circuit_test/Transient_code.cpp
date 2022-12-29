@@ -20,8 +20,13 @@
 
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
-    Each NMOS added, adds 4 internal nodes. The other nodes can be added separately in the same equation. */
-int const T_nodes = 3 /*External nodes*/ + 4*2 /* No. of MOSFETs (internal nodes)*/;
+    Number of MOSFETs and cascaded levels are assigned above too. External nodes are the nodes which  */
+int const external_nodes = 2; // Number of external nodes (excluding ground and ring oscillator loop nodes)
+int const external_mosfets = 0; // Number of standalone mosfets (excluding mosfets from ring oscillator)
+int const cascaded_level = 3; // Number of cascaded ring oscillators 
+int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
+int const no_of_mosfets = external_mosfets  + 2*cascaded_level;// Total number of MOSFETs
+int const T_nodes = external_nodes + 4*no_of_mosfets + cascaded_level;
 
 #include "Transient_code.h"
 
@@ -34,11 +39,18 @@ int const T_nodes = 3 /*External nodes*/ + 4*2 /* No. of MOSFETs (internal nodes
 
 // Assigning the stamp matrices for dynamic and non-linear components
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode){
-    // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner)
+    // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner, RingOscillatorStages)
     /*--------------------------------------------can be changed-------------------------------------------------*/
     
-    PMOS_assigner(1, 3, 1, 2, 2, h, solution, LHS, RHS, mode);
-    NMOS_assigner(2, 2, 1, 0, 0, h, solution, LHS, RHS, mode);
+    RingOscillatorStages(LHS, RHS, solution, h, mode);
+
+    // the ring oscillator stages are assigned in the following order:
+    // PMOS_assigner(1, 1, 2, 3, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(2, 3, 2, 0, 0, h, solution, LHS, RHS, mode);
+    // PMOS_assigner(3, 1, 3, 4, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(4, 4, 3, 0, 0, h, solution, LHS, RHS, mode);
+    // PMOS_assigner(5, 1, 4, 5, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(6, 5, 4, 0, 0, h, solution, LHS, RHS, mode);
     
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
@@ -78,11 +90,10 @@ int main(int argc, const char ** argv){
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE RESISTOR STAMP (R_assigner)
-    // R_assigner(2,0,1e6,LHS,RHS);
+    // R_assigner(3,0,1e6,LHS,RHS);
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE CURRENT STAMP (Is_assigner, VCCS_assigner)
-
 
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
@@ -98,14 +109,13 @@ int main(int argc, const char ** argv){
     double tper = 2e-3;
 
     // Assigning DC voltage sources
-    // Vs_assigner(1,0,2,LHS,RHS); // VDD
-    Vs_assigner(3,0,4,LHS,RHS);
+    Vs_assigner(supply_voltage_node,0,2,LHS,RHS); // supply voltage for the ring oscillator, vdd
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)
     std::vector<double> RHS_locate = {
         // Assigning the voltage matrix on LHS and RHS for the pulse voltage
-        Vs_assigner(1,0,V1,LHS,RHS)
+        Vs_assigner(2,0,V1,LHS,RHS)
     };
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // Checking the LHS and RHS matrices

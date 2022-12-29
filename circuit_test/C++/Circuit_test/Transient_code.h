@@ -51,6 +51,7 @@ arma::vec arange(double tstart, double h, double vec_size){
     return time;
 }
 
+// assigning the matrix stamps for the VCCS
 void VCCS_assigner(int node_x,int node_y,int node_cx,int node_cy,double R,arma::mat &LHS){
     int maxi = LHS.n_cols;
     int maxj = LHS.n_rows;
@@ -280,10 +281,10 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double CBS = 6e-17; // typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
-    R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
-    R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
-    R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
-    R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
+    R_assigner(node_vd,T_nodes-(4*number)+2,1e-3,LHS,RHS); // # RD
+    R_assigner(node_vg,T_nodes-(4*number)+1,1e-3,LHS,RHS); // # RG
+    R_assigner(T_nodes-(4*number)+4,node_vs,1e-3,LHS,RHS); // # RS
+    R_assigner(T_nodes-(4*number)+3,node_vb,1e-3,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
     
@@ -421,10 +422,10 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double CBS = 6e-17; // 6e-17 typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
-    R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
-    R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
-    R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
-    R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
+    R_assigner(node_vd,T_nodes-(4*number)+2,1e-3,LHS,RHS); // # RD
+    R_assigner(node_vg,T_nodes-(4*number)+1,1e-3,LHS,RHS); // # RG
+    R_assigner(T_nodes-(4*number)+4,node_vs,1e-3,LHS,RHS); // # RS
+    R_assigner(T_nodes-(4*number)+3,node_vb,1e-3,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
     
@@ -435,24 +436,27 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     //     vt = vt0 + gamma*((sqrt(phi-vdb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     // }
     
-    double n_vt = -vt;
+    double n_vt = std::abs(vt);
     // if (vsd >= 0){
-            if ((vsd >= (vsg-n_vt)) && (vsg >= n_vt)){ // # the transistor is in saturation
-                id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
-                gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
-                gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
-                gmb = gm*gamma/(2*sqrt(phi-vsb));
-            }else  if ((vsd <= (vsd-n_vt)) && (vsg >= n_vt)){ // # the transistor is in linear
+            if ((vds >= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in linear
                 id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
                 gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
                 gm = Beta*(1+LAMBDA*vsd)*vsd;
                 gmb = gm*gamma/(2*sqrt(phi-vsb));
+                // std::cout<<"Linear"<<std::endl;
+             }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
+                id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
+                gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
+                gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
+                gmb = gm*gamma/(2*sqrt(phi-vsb));
+                // std::cout<<"Saturation"<<std::endl;
             }else{ // # the transistor is in cutoff
                 id = 0;
                 gds = 0;
                 gm = 0;
                 gmb = 0;
-            }
+                // std::cout<<"Cutoff"<<std::endl;
+            } 
     // }else{ // For depletion mode
     //     vsb = vdb;
     //     vsg = vdg;
@@ -484,11 +488,29 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     I_DSeq = id - gds*vsd - gm*vsg - gmb*vsb;
 
     Is_assigner(node_vs,node_vd,I_DSeq,LHS,RHS);
-    VCCS_assigner(node_vd,node_vs,node_vb,node_vs,gmb,LHS); // assigning gmb
+    VCCS_assigner(node_vs,node_vd,node_vs,node_vb,gmb,LHS); // assigning gmb
     R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
-    VCCS_assigner(node_vd,node_vs,node_vg,node_vs,gm,LHS); // # assigning gm
+    VCCS_assigner(node_vs,node_vd,node_vs,node_vg,gm,LHS); // # assigning gm
 }
 
+void RingOscillatorStages(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
+    // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner)
+    /*--------------------------------------------can be changed-------------------------------------------------*/
+    int even = 0;
+    int odd = 1;
+    for(int i = 1; i <= cascaded_level; i++){
+        even += 2;
+        PMOS_assigner(odd, supply_voltage_node, i+1, i+2, supply_voltage_node, h, solution, LHS, RHS, mode);
+        NMOS_assigner(even, i+2, i+1, 0, 0, h, solution, LHS, RHS, mode);
+        odd += 2;
+    }
+    // PMOS_assigner(1, 1, 2, 3, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(2, 3, 2, 0, 0, h, solution, LHS, RHS, mode);
+    // PMOS_assigner(3, 1, 3, 4, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(4, 4, 3, 0, 0, h, solution, LHS, RHS, mode);
+    // PMOS_assigner(5, 1, 4, 5, 1, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(6, 5, 4, 0, 0, h, solution, LHS, RHS, mode);
+}
 
 
 // Voltage source stamp assigner
@@ -604,7 +626,7 @@ arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RH
     error.row(0) = error_val;
     int iteration_counter = 0;
     arma::mat delta = arma::zeros(row_size,1);
-    while((error(0,0) > eps_val) && (iteration_counter < 4)){ // iteration counter can be changed depending on the non-linearity of the circuit
+    while((error(0,0) > eps_val) && (iteration_counter < 20)){ // iteration counter can be changed depending on the non-linearity of the circuit
         auto matrices = DynamicNonLinear(LHS,RHS,solution,h,mode);
         delta = arma::solve(matrices.first,(matrices.first*solution) - matrices.second);
         error.row(0) = arma::max(arma::abs(delta));
