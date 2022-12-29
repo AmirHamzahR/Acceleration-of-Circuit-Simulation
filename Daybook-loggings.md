@@ -783,5 +783,7 @@ C++ simulation for CMOS circuit
 
 From here, the CMOS circuit can also be successfully simulated using the C++ code. However, after trying out with different values for pulsed voltage and vdd, the C++ simulation went a bit haywire compared to the LTSpice simulation. One speculation may be due to the small error in the PMOS which then exacalated as the variables becomes larger in value. To improve this, the PMOS will be investigated further to check if the error is blooming from there.
 
+## 30/12/2022
 
+Managed to now simulate Ring oscillator with a for loop that could cascade the ring oscillator into intended number of stages.
 
