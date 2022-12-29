@@ -737,9 +737,51 @@ C++ 2nd nodal voltage simulation for simple pmos circuit
 
 Both the simulation have the same results with almost 100% accuracy. The simulation is a success which paves the way in creating a ring oscillator for benchmarking purposes.
 
+## 25/12/2022
 
+After discussing with Dr. Danial, the circuit that have been used for testing was not accurate enough in terms of understanding the characteristics of the NMOS and PMOS. Due to this, Dr. Danial has given a few models to test the NMOS, PMOS and even CMOS inverter circuit. From this, the characteristic of the MOSFETs can be accurately tested further. The diagram of the NMOS, PMOS, and CMOS circuit is shown below.
 
+![](circuit_test/C++/thumbnail_nMOS_pMOS_INV.jpg)
 
+The circuits are then made in LTSpice and simulated on both the C++ code and LTSpice simulation. The first circuit to be tested is the NMOS inverter circuit which is given on the diagram below.
+
+![](circuit_test/C++/true_nmos.png)
+
+The NMOS is tested with a resistor connected to the drain and vdd, voltage pulse connected to the gate and ground that pulses from 0V to 5V and vdd with 0.5V. The simulation is then ran for both LTSpice and C++ code which the analysis can be seen down below.
+
+![](circuit_test/C++/true_nmos_lt.png)
+
+LTSpice simulation for NMOS circuit
+
+![](circuit_test/C++/cpp_true_nmos.png)
+
+C++ simulation for NMOS circuit
+
+It can be seen that the C++ code has the same results as the LTSpice simulation for the NMOS circuit. Now, the PMOS circuit can be simulated to see if the behaviour of the PMOS for LTSpice and C++ are the same. The circuit is the same as the diagram shown from Dr. Danial. Using the same values from the NMOS circuit but different polarities for pulsed voltage and vdd, LTSpice and C++ simulation are done. The results of these simulations is shown below 
+
+![](circuit_test/C++/true_pmos_lt.png)
+
+LTSpice simulation for PMOS circuit
+
+![](circuit_test/C++/cpp_true_pmos.png)
+
+C++ simulation for PMOS circuit
+
+It can now be seen that the results of the simulations are similar but there is a slight difference on the top edge of each triangle wave. Since it is only a minute difference, it may be due to the non-linearity of the PMOS in this circuit. Now, the CMOS circuit can be simulated. The diagram of the CMOS circuit is shown below.
+
+![](circuit_test/C++/true_cmos.png)
+
+The CMOS circuit is firstly tested with 100mV pulsed voltage that consists of 80mV vdd. The PMOS and NMOS is arranged in a way that it could properly be used as a digital inverter. The simulation of this CMOS circuit in LTSpice and C++ is shown below.
+
+![](circuit_test/C++/lt_cmos.png)
+
+LTSpice simulation for CMOS circuit
+
+![](circuit_test/C++/cmos_cpp.png)
+
+C++ simulation for CMOS circuit
+
+From here, the CMOS circuit can also be successfully simulated using the C++ code. However, after trying out with different values for pulsed voltage and vdd, the C++ simulation went a bit haywire compared to the LTSpice simulation. One speculation may be due to the small error in the PMOS which then exacalated as the variables becomes larger in value. To improve this, the PMOS will be investigated further to check if the error is blooming from there.
 
 
 
