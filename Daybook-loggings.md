@@ -781,9 +781,46 @@ LTSpice simulation for CMOS circuit
 
 C++ simulation for CMOS circuit
 
-From here, the CMOS circuit can also be successfully simulated using the C++ code. However, after trying out with different values for pulsed voltage and vdd, the C++ simulation went a bit haywire compared to the LTSpice simulation. One speculation may be due to the small error in the PMOS which then exacalated as the variables becomes larger in value. To improve this, the PMOS will be investigated further to check if the error is blooming from there.
+From here, the CMOS circuit can also be successfully simulated using the C++ code. However, after trying out with different values for pulsed voltage and vdd, the C++ simulation went a bit haywire compared to the LTSpice simulation. Moreover, the circuit can only simulate ultra-low voltages which is around the range of 0 to 0.5V. One speculation may be due to the small error in the PMOS which then exacalated as the variables becomes larger in value. To improve this, the PMOS will be investigated further to check if the error is blooming from there.
 
 ## 30/12/2022
 
-Managed to now simulate Ring oscillator with a for loop that could cascade the ring oscillator into intended number of stages.
+Since the PMOS model was having some problems, the concept of P-channel MOSFETs were revised again to see the core of the problem. This [source](https://www.researchgate.net/publication/285773437_Design_and_test_challenges_in_Nano-scale_analog_and_mixed_CMOS_technology/figures?lo=1) shows that the bulk should be connected to the source. An example of this is shown below.
 
+![](circuit_test/C++/NMOS-and-PMOS-transistors-structure.png)
+
+This is actually wrong in the C++ code since the bulk was being connected to the drain port. However, after connecting the bulk to the source port which is similar to the LTSpice model, the same error still occurs in the C++ plot results. This means that the error is still residing in the PMOS model. 
+
+Another [source](https://forum.allaboutcircuits.com/threads/my-ring-oscillator-amplifier-in-ltspice-wont-match-with-breadboard-output.143481/) which explains about the rotation of the transistor in the circuit. After checking my MOSFET arrangements, it seems that the drain port of the PMOS was suppossed to connected to the vdd rather than the source port. By understanding this, the PMOS model is then re-rerouted in the LTSpice and the parameters for the PMOS_assigner is also changed. By doing so, the PMOS circuit is then tested again on the LTSpice and the circuit which the results are shown below. The simulation uses voltage pulse of 5V and 2V for the vdd.
+
+![](circuit_test/C++/true_pmos_lt2.png)
+
+LTSpice simulation for PMOS circuit
+
+![](circuit_test/C++/cpp_true_pmos2.png)
+
+C++ code simulation for PMOS circuit
+
+The simulation for the C++ code is now exactly the same as LTSpice simulation for the PMOS circuit. As this was a success, the CMOS circuit can be tested again. The CMOS circuit also had a perfect simulation too. As it was suspected, the PMOS had some errors before this from the code and also from how the PMOS LTSpice model was understood. From here, a ring oscillator can now be made by cascading the output signal of the CMOS into another CMOS and repeating it over and over again. The stage of the ring oscillator is then chosen to be 3 to test the circuit. The circuit can be seen below. The simulation uses voltage pulse of 0.08V and 0.1V for the vdd.
+
+![](circuit_test/C++/ring_oscillator_100_80_e_3_lt.png)
+
+LTSpice 0.1V 3rd stage ring oscillator simulation
+
+![](circuit_test/C++/ring_oscillator_100_80_e_3_cpp.png)
+
+C++ code 0.1V 3rd stage ring oscillator simulation
+
+It seems that the simulation runs perfectly for low voltages which now higher value of the voltages can be analysed. In this case, 5V and 2V chosen for the pulse voltage and vdd respectively. This is also done and analysed on the LTSpice and C++ code. The simulation is actually oscillating quite a lot because the newton raphson iteration is set at 5 while the non-linearity of the circuit is quite high. Due to the lack of time-step control for the NR iteration, the amount of iterations is then changed manually from 5 to 50 iterations. The parameters for the internal capacitors, diodes, and resistors in the MOSFETs are also changed to follow both typical and default parameters from [the datasheet](https://qucs.sourceforge.net/tech/technical.html). The results of this is shown below.
+
+![](circuit_test/C++/perfect_ring_oscillator_lt.png)
+
+LTSpice 5V 3rd stage ring oscillator simulation
+
+![](circuit_test/C++/perfect_ring_oscillator_cpp.png)
+
+C++ code 5V 3rd stage ring oscillator simulation
+
+It is a success for the C++ code on simulating the ring oscillator. The simulation is actually a bit slow compared to the LTSpice counterpart but the results were accurate. This means that efficiency of the code is still lower than the circuit simulator software but the results are highly accurate. To also improve the assignment of PMOS and NMOS for the ring oscillator, a RingOscillatorStages function has been created which uses for loop for the assignments. This can make the circuit to simulate any levels of ring oscillator but there is a limitation to it. Currently, adding other circuit components with the RingOscillatorStages function declared in the code is a bit hard as the overall node numbering is a bit different since the ring oscillator already contains its internal nodes. The internal nodes could go up to a thousand or a million depending on the ring oscillator stage set by the user. 
+
+From this point forward, the C++ code is ready to be tested for benchmarking purposes.
