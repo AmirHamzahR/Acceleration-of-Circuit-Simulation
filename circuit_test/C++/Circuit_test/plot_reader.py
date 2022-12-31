@@ -46,11 +46,13 @@ def Vs_current(Vs_num,Total_Vs):
     return V_curr
 
 # NODAL VOLTAGES FOR Y-AXIS
-v1 = nodal_voltage(1)
-v2 = nodal_voltage(2)
-v3 = nodal_voltage(3)
+v1 = nodal_voltage(1) # vdd
+v2 = nodal_voltage(2) # pulsed voltage
+v3 = nodal_voltage(3) 
 v4 = nodal_voltage(4)
 v5 = nodal_voltage(5)
+v6 = nodal_voltage(6)
+v7 = nodal_voltage(7)
 
 # TIME ARRAY FOR X-AXIS
 time = pd.read_csv('time.csv')
@@ -64,6 +66,8 @@ plt.plot(time, v2, color = 'blue', label = '$nodal voltage 2$')
 plt.plot(time, v3, color = 'green', label = '$nodal voltage 3$')
 plt.plot(time, v4, color = 'yellow', label = '$nodal voltage 4$')
 plt.plot(time, v5, color = 'black', label = '$nodal voltage 5$')
+plt.plot(time, v5, color = 'brown', label = '$nodal voltage 6$')
+plt.plot(time, v5, color = 'green', label = '$nodal voltage 7$')
 
 plt.xlabel('Time ($s$)')
 plt.ylabel('Variables ($v1$, $v2$, $v3$, $v4$, current)')
