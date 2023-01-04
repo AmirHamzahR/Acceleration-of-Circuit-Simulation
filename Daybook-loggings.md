@@ -824,3 +824,40 @@ C++ code 5V 3rd stage ring oscillator simulation
 It is a success for the C++ code on simulating the ring oscillator. The simulation is actually a bit slow compared to the LTSpice counterpart but the results were accurate. This means that efficiency of the code is still lower than the circuit simulator software but the results are highly accurate. To also improve the assignment of PMOS and NMOS for the ring oscillator, a RingOscillatorStages function has been created which uses for loop for the assignments. This can make the circuit to simulate any levels of ring oscillator but there is a limitation to it. Currently, adding other circuit components with the RingOscillatorStages function declared in the code is a bit hard as the overall node numbering is a bit different since the ring oscillator already contains its internal nodes. The internal nodes could go up to a thousand or a million depending on the ring oscillator stage set by the user. 
 
 From this point forward, the C++ code is ready to be tested for benchmarking purposes.
+
+## 2/1/2022
+
+The ring oscillator model need to be changed since the model used before is not a correct ring oscillator. A new model have been changed which follows the normal ring oscillator format with the NOT gates cascaded on odd number of stages with resistors and capacitors included for each stages. The circuit of the ring oscillator is shown below.
+
+![](circuit_test/C++/true_ringoscillator.png)
+
+From here, some tests were made to see if it was working. The vdd used for the first test is 1V in a 20ms transient simulation. The simulation for the LTSpice and C++ analysis is shown below.
+
+![](circuit_test/C++/LT_RO_1V.png)
+
+LTSpice simulation for 3 stage ring oscillator (vdd=1V)
+
+![](circuit_test/C++/CPP_RO_1V.png)
+
+C++ simulation for 3 stage ring oscillator (vdd=1V)
+
+It can be seen that the shape of the graphs are similar but the values oscillates at different voltages. In fact, the C++ code oscillates around the negative region too which should not happen for a normal ring oscillator without any negative voltages. This means that there is some error inside the C++ code which makes it oscillate around the negative region. 
+
+## 3/1/2022
+
+After a thorough process of debugging, it seems that the C_assigner function had some error that was caused because the Is_assigner had been changed before. Before this, it the Is_assigner had different polarities but it was actually wrong according to the MNA stamps. After changing the polarity of the Is_assigner, the C_assigner's current assigner had not changed. This caused the current to constantly add and subtract at that makes it oscillate around 0. After changing the polarity of the current in C_assigner, the capacitor can be modeled correctly again.
+
+Since the error has been solved, the ring oscillator can now be simulated again using the C++ code. Now, the C++ and LTSpice simulation directly uses the same value from the circuit shown with a 5V vdd. The simulation of C++ and LTSpice is shown below.
+
+![](circuit_test/C++/RO_outputV_lt.png)
+
+LTSpice simulation for 3 stage ring oscillator (vdd=5V)
+
+![](circuit_test/C++/RO_outputV_cpp.png)
+
+C++ simulation for 3 stage ring oscillator (vdd=5V)
+
+Both simulation is now similar to each other which oscillates from around 0.5V to 4.4V. The C++ code however has a slightly different peak voltage of 4.6V which leads to an accuracy of 96.356%. The frequency is quite different compared to the LTSpice simulation with the C++ frequency being a bit low. After testing the C++ code with higher number of Newton-Raphson iteration, it seems that the frequency increases slightly but not that much. The inaccuracy of the frequency could be due to the lack of time-step control in this code. The speed of the simulation is also quite slow compared to LTSpice for the 3 stage ring oscillator. This could be improved in the future with more time-step controls and better code optimization. 
+
+Thus, the code is now ready for benchmarking on the number of ring oscillator stages and the C++ optimizations such as -O1 and -O3.
+
