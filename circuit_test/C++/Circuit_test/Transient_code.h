@@ -8,7 +8,7 @@
 #include <cmath>
 
 // Matrix stamps assigner using Modified Nodal Analysis
-std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode);
+std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode);
 void R_assigner(double node_x, double node_y, double R, arma::mat &LHS, arma::mat &RHS);
 void Is_assigner(double node_x, double node_y, double I, arma::mat &LHS, arma::mat &RHS);
 double Vs_assigner(int node_x, int node_y, double V_value, arma::mat &LHS, arma::mat &RHS);
@@ -213,7 +213,7 @@ arma::mat branch_ext(arma::mat M, int node_x, int node_y){
 //     return Ind;
 // }
 
-void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
+void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
     // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
     // # we are using a discrete MOSFET, so the vb is connected to the source terminal
 
@@ -256,10 +256,8 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double gds = 0;
     double gm = 0;
     double gmb = 0;
-    double W = 100e-6; // default is 100um
-    double L = 100e-6; // default is 100um
     double Ld = 0;
-    double Leff = L-2*Ld;
+    double Leff = L;
     double kp = 2e-5; // default is 2e-5
     double mCox = kp;
     double LAMBDA = 0;
@@ -281,9 +279,9 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double CBS = 6e-17; // typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
-    R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
+    R_assigner(node_vd,T_nodes-(4*number)+2,0.2,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
-    R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
+    R_assigner(T_nodes-(4*number)+4,node_vs,0.1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
@@ -349,7 +347,7 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     VCCS_assigner(node_vd,node_vs,node_vg,node_vs,gm,LHS); // # assigning gm
 }
 
-void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_vb, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
+void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
     // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
     // # we are using a discrete MOSFET, so the vb is connected to the source terminal
 
@@ -390,17 +388,15 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double vsb = vs - vb;
     // depletion mode voltages
     double vdb = vd - vb;
-    double vdg = vd - vg;
+    double vdg = vd - vg; 
 
 
-    double id = 0;
-    double gds = 0;
-    double gm = 0;
+    double id = 0; 
+    double gds = 0; 
+    double gm = 0; 
     double gmb = 0;
-    double W = 100e-6; // default is 100um
-    double L = 100e-6; // default is 100um
     double Ld = 0;
-    double Leff = L-2*Ld;
+    double Leff = L;
     double kp = 2e-5; // default is 2e-5
     double mCox = kp;
     double LAMBDA = 0;
@@ -422,9 +418,9 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double CBS = 6e-17; // 6e-17 typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
-    R_assigner(node_vd,T_nodes-(4*number)+2,1,LHS,RHS); // # RD
+    R_assigner(node_vd,T_nodes-(4*number)+2,0.2,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
-    R_assigner(T_nodes-(4*number)+4,node_vs,1,LHS,RHS); // # RS
+    R_assigner(T_nodes-(4*number)+4,node_vs,0.1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
@@ -493,23 +489,31 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     VCCS_assigner(node_vs,node_vd,node_vs,node_vg,gm,LHS); // # assigning gm
 }
 
-void RingOscillatorStages(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
+void RingOscillatorStages(double W,double L,double R, double C,arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
     // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner)
     /*--------------------------------------------can be changed-------------------------------------------------*/
     int even = 0;
     int odd = 1;
+    int n_odd = 1;
+    int n_even = 0;
     for(int i = 1; i <= cascaded_level; i++){
         even += 2;
-        PMOS_assigner(odd, supply_voltage_node, i+1, i+2, supply_voltage_node, h, solution, LHS, RHS, mode);
-        NMOS_assigner(even, i+2, i+1, 0, 0, h, solution, LHS, RHS, mode);
+        n_odd += 2;
+        n_even += 2;
+        if(i == (cascaded_level)){
+            PMOS_assigner(odd, supply_voltage_node, n_even, n_odd, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
+            NMOS_assigner(even, n_odd, n_even, 0, 0, W, L, h, solution, LHS, RHS, mode);
+            R_assigner(n_odd, supply_voltage_node+1, R, LHS, RHS);
+            C_assigner(supply_voltage_node+1, 0, C, h, LHS, RHS, solution, mode);
+        }
+        else{
+            PMOS_assigner(odd, supply_voltage_node, n_even, n_odd, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
+            NMOS_assigner(even, n_odd, n_even, 0, 0, W, L, h, solution, LHS, RHS, mode);
+            R_assigner(n_odd, n_even+2, R, LHS, RHS);
+            C_assigner(n_even+2, 0, C, h, LHS, RHS, solution, mode);
+        }
         odd += 2;
     }
-    // PMOS_assigner(1, 1, 2, 3, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(2, 3, 2, 0, 0, h, solution, LHS, RHS, mode);
-    // PMOS_assigner(3, 1, 3, 4, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(4, 4, 3, 0, 0, h, solution, LHS, RHS, mode);
-    // PMOS_assigner(5, 1, 4, 5, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(6, 5, 4, 0, 0, h, solution, LHS, RHS, mode);
 }
 
 
@@ -553,7 +557,7 @@ void C_assigner(int node_x,int node_y,double C, double h, arma::mat &LHS, arma::
     // Matrix stamp for a capacitor on LHS
     R_assigner(node_x,node_y,cond(x),LHS,RHS);
     // Matrix stamp for a capacitor on RHS
-    Is_assigner(node_x,node_y,x1,LHS,RHS);
+    Is_assigner(node_x,node_y,-x1,LHS,RHS);
 }
 
 // Voltage pulse assigner
@@ -626,7 +630,7 @@ arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RH
     error.row(0) = error_val;
     int iteration_counter = 0;
     arma::mat delta = arma::zeros(row_size,1);
-    while((error(0,0) > eps_val) && (iteration_counter < 50)){ // iteration counter can be changed depending on the non-linearity of the circuit
+    while((error(0,0) > eps_val) && (iteration_counter < 8)){ // iteration counter can be changed depending on the non-linearity of the circuit
         auto matrices = DynamicNonLinear(LHS,RHS,solution,h,mode);
         delta = arma::solve(matrices.first,(matrices.first*solution) - matrices.second);
         error.row(0) = arma::max(arma::abs(delta));

@@ -21,12 +21,12 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Number of MOSFETs and cascaded levels are assigned above too. External nodes are the nodes which  */
-int const external_nodes = 2; // Number of external nodes (excluding ground and ring oscillator loop nodes)
+int const external_nodes = 1; // Number of external nodes (excluding ground and ring oscillator loop nodes)
 int const external_mosfets = 0; // Number of standalone mosfets (excluding mosfets from ring oscillator)
 int const cascaded_level = 3; // Number of cascaded ring oscillators 
 int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
 int const no_of_mosfets = external_mosfets  + 2*cascaded_level;// Total number of MOSFETs
-int const T_nodes = external_nodes + 4*no_of_mosfets + cascaded_level;
+int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
 
 #include "Transient_code.h"
 
@@ -38,19 +38,27 @@ int const T_nodes = external_nodes + 4*no_of_mosfets + cascaded_level;
 */
 
 // Assigning the stamp matrices for dynamic and non-linear components
-std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat LHS, arma::mat RHS, arma::mat solution, double h, int mode){
+std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
     // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner, RingOscillatorStages)
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    
-    RingOscillatorStages(LHS, RHS, solution, h, mode);
+    // double W = 100e-6;
+    // double L = 100e-6;
+    RingOscillatorStages(100e-6, 100e-6, 1e3, 10e-12, LHS, RHS, solution, h, mode);
 
     // the ring oscillator stages are assigned in the following order:
-    // PMOS_assigner(1, 1, 2, 3, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(2, 3, 2, 0, 0, h, solution, LHS, RHS, mode);
-    // PMOS_assigner(3, 1, 3, 4, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(4, 4, 3, 0, 0, h, solution, LHS, RHS, mode);
-    // PMOS_assigner(5, 1, 4, 5, 1, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(6, 5, 4, 0, 0, h, solution, LHS, RHS, mode);
+
+    // PMOS_assigner(1, supply_voltage_node, 2, 3, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(2, 3, 2, 0, 0, W, L, h, solution, LHS, RHS, mode);
+    // R_assigner(3, 4, 1e3, LHS, RHS);
+    // C_assigner(0, 4, 10e-12, h, LHS, RHS, solution, mode);
+    // PMOS_assigner(3, supply_voltage_node, 4, 5, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(4, 5, 4, 0, 0, W, L, h, solution, LHS, RHS, mode);
+    // R_assigner(5, 6, 1e3, LHS, RHS);
+    // C_assigner(0, 6, 10e-12, h, LHS, RHS, solution, mode);
+    // PMOS_assigner(5, supply_voltage_node, 6, 7, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
+    // NMOS_assigner(6, 7, 6, 0, 0, W, L, h, solution, LHS, RHS, mode);
+    // R_assigner(7, 2, 1e3, LHS, RHS);
+    // C_assigner(0, 2, 10e-12, h, LHS, RHS, solution, mode);
     
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
@@ -69,12 +77,12 @@ int main(int argc, const char ** argv){
 
     // TRANSIENT SIMULATION SETTINGS
     // The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
-    int n = 10001; // 5001 seems to be the sweet spot
+    int n = 5001; // 5001 seems to be the sweet spot
     int i = 0;
     // Defining the Time and Timestep for Transient Simulation
     arma::mat X1 = arma::ones(n,1);
     double t_start = 0;
-    double t_end = 20e-3;
+    double t_end = 3e-6;
     double t = t_end - t_start;
     double h = t/(n-1);
     std::cout << h << "\n";
@@ -90,7 +98,7 @@ int main(int argc, const char ** argv){
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE RESISTOR STAMP (R_assigner)
-    // R_assigner(3,0,1e6,LHS,RHS);
+    // R_assigner(1,2,3e3,LHS,RHS);
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE CURRENT STAMP (Is_assigner, VCCS_assigner)
@@ -99,24 +107,24 @@ int main(int argc, const char ** argv){
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE VOLTAGE SOURCES (Vs_assigner)
     // Pulse voltage settings
-    double t1 = 0; // time used for the loop
-    double V1 = 0;
-    double V2 = 5;
-    double td = 1e-3;
-    double tr = 1e-3;
-    double tf = 1e-3;
-    double tpw = 0;
-    double tper = 2e-3;
+    // double t1 = 0; // time used for the loop
+    // double V1 = 2;
+    // double V2 = 6;
+    // double td = 1e-3;
+    // double tr = 0.5e-3;
+    // double tf = 0.2e-3;
+    // double tpw = 2e-3;
+    // double tper = 4e-3;
 
     // Assigning DC voltage sources
-    Vs_assigner(supply_voltage_node,0,2,LHS,RHS); // supply voltage for the ring oscillator, vdd
+    Vs_assigner(supply_voltage_node,0,5,LHS,RHS); // supply voltage for the ring oscillator, vdd
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)
-    std::vector<double> RHS_locate = {
-        // Assigning the voltage matrix on LHS and RHS for the pulse voltage
-        Vs_assigner(2,0,V1,LHS,RHS)
-    };
+    // std::vector<double> RHS_locate = {
+    //     // Assigning the voltage matrix on LHS and RHS for the pulse voltage
+    //     Vs_assigner(1,0,V1,LHS,RHS)
+    // };
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // Checking the LHS and RHS matrices
     LHS.print("LHS matrix =");
@@ -150,10 +158,12 @@ int main(int argc, const char ** argv){
         
         LHS = init_LHS;
         RHS = init_RHS;
-        std::vector<double> RHS_value = {
-            V_pulse(V1,V2,t1,td,tr,tf,tpw,tper,h)
-        };
-        RHS = RHS_update(RHS_locate, init_RHS, RHS_value);
+
+        // std::vector<double> RHS_value = {
+        //     V_pulse(V1,V2,t1,td,tr,tf,tpw,tper,h)
+        // };
+        // RHS = RHS_update(RHS_locate, init_RHS, RHS_value);
+
         // Calling the Newton-Raphson system here
         solution = NewtonRaphson_system(init_LHS,init_RHS, LHS, RHS, solution,h,mode);
         // Assigning the variables that will be plotted and analysed as seen in a circuit simulator
