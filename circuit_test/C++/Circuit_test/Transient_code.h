@@ -43,7 +43,7 @@ double cond(double R){
 // extra -  adding arange() function here to return the time vector
 arma::vec arange(double tstart, double h, double vec_size){
     arma::vec time = arma::zeros(vec_size,1);
-    for(int i=0; i<vec_size; ++i)
+    for(int i=0; i<vec_size; i++)
     {
         time[i] = tstart;
         tstart = tstart + h;
@@ -213,7 +213,7 @@ arma::mat branch_ext(arma::mat M, int node_x, int node_y){
 //     return Ind;
 // }
 
-void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
+double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
     // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
     // # we are using a discrete MOSFET, so the vb is connected to the source terminal
 
@@ -260,12 +260,12 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double Leff = L;
     double kp = 2e-5; // default is 2e-5
     double mCox = kp;
-    double LAMBDA = 0;
+    double LAMBDA = 0.1;
     
     double Beta = (mCox)*(W/Leff);
     double gamma = 0;
     double phi = 0.65;
-    double vt0 = 0; // default is 0
+    double vt0 = 0.7; // default is 0
     double vt = 0;
     double I_DSeq = 0;
 
@@ -279,13 +279,14 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     double CBS = 6e-17; // typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
+    if(code == 0){
     R_assigner(node_vd,T_nodes-(4*number)+2,0.2,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
     R_assigner(T_nodes-(4*number)+4,node_vs,0.1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
-    
+    }
     // For the conductances
     // if(vds>=0){
         vt = vt0 + gamma*((sqrt(phi-vbs)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
@@ -335,19 +336,22 @@ void NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_v
     // }
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
+    if(code == 0){
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
     C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
-
+    }
     I_DSeq = id - gds*vds - gm*vgs - gmb*vbs/*/*  /**/; // # 10.190 equation
     // Is_assigner(node_vs,node_vd,id,LHS,RHS);
     Is_assigner(node_vd,node_vs,I_DSeq,LHS,RHS);
     VCCS_assigner(node_vd,node_vs,node_vb,node_vs,gmb,LHS); // assigning gmb
     R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
     VCCS_assigner(node_vd,node_vs,node_vg,node_vs,gm,LHS); // # assigning gm
+
+    return id;
 }
 
-void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
+double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
     // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
     // # we are using a discrete MOSFET, so the vb is connected to the source terminal
 
@@ -399,12 +403,12 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double Leff = L;
     double kp = 2e-5; // default is 2e-5
     double mCox = kp;
-    double LAMBDA = 0;
+    double LAMBDA = 0.1;
     
     double Beta = (mCox)*(W/Leff);
     double gamma = 0;
     double phi = 0.65;
-    double vt0 = 0; // default is 0
+    double vt0 = -0.7; // default is 0
     double vt = 0;
     double I_DSeq = 0;
 
@@ -418,13 +422,14 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     double CBS = 6e-17; // 6e-17 typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
+    if(code == 0){
     R_assigner(node_vd,T_nodes-(4*number)+2,0.2,LHS,RHS); // # RD
     R_assigner(node_vg,T_nodes-(4*number)+1,1,LHS,RHS); // # RG
     R_assigner(T_nodes-(4*number)+4,node_vs,0.1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
-    
+    }
     // If vds>=0, then the transistor is in enhancement mode, otherwise it is in depletion mode
     // if(vsd>=0){
         vt = vt0 - gamma*((sqrt(phi-vsb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
@@ -432,61 +437,42 @@ void PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_v
     //     vt = vt0 + gamma*((sqrt(phi-vdb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
     // }
     
-    double n_vt = std::abs(vt);
-    // if (vsd >= 0){
-            if ((vds >= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in linear
-                id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
-                gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
-                gm = Beta*(1+LAMBDA*vsd)*vsd;
-                gmb = gm*gamma/(2*sqrt(phi-vsb));
-                // std::cout<<"Linear"<<std::endl;
-             }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
-                id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
-                gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
-                gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
-                gmb = gm*gamma/(2*sqrt(phi-vsb));
-                // std::cout<<"Saturation"<<std::endl;
-            }else{ // # the transistor is in cutoff
-                id = 0;
-                gds = 0;
-                gm = 0;
-                gmb = 0;
-                // std::cout<<"Cutoff"<<std::endl;
-            } 
-    // }else{ // For depletion mode
-    //     vsb = vdb;
-    //     vsg = vdg;
-    //     vsd = -vsd;
-    //     if ((vsd <= (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in linear
-    //             id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
-    //             gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
-    //             gm = Beta*(1+LAMBDA*vsd)*vsd;
-    //             gmb = gm*gamma/(2*sqrt(phi-vsb));
-    //         }else if ((vsd > (vsg-n_vt)) && (vsg > n_vt)){ // # the transistor is in saturation
-    //             id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
-    //             gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
-    //             gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
-    //             gmb = gm*gamma/(2*sqrt(phi-vsb));
-    //         }else{ // # the transistor is in cutoff
-    //             id = 0;
-    //             gds = 0;
-    //             gm = 0;
-    //             gmb = 0;
-    //     }
-    //     id = -id;
-    // }
+    double n_vt = std::abs(vt); 
+
+    if ((vds >= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in linear
+        id = Beta*(vsg-n_vt-vsd/2)*vsd*(1+LAMBDA*vsd);
+        gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
+        gm = Beta*(1+LAMBDA*vsd)*vsd;
+        gmb = gm*gamma/(2*sqrt(phi-vsb));
+        // std::cout<<"Linear"<<std::endl;
+        }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
+        id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
+        gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
+        gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
+        gmb = gm*gamma/(2*sqrt(phi-vsb));
+        // std::cout<<"Saturation"<<std::endl;
+    }else{ // # the transistor is in cutoff
+        id = 0;
+        gds = 0;
+        gm = 0;
+        gmb = 0;
+        // std::cout<<"Cutoff"<<std::endl;
+    } 
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
+    if(code == 0){
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
     C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
-
+    }
     I_DSeq = id - gds*vsd - gm*vsg - gmb*vsb;
 
     Is_assigner(node_vs,node_vd,I_DSeq,LHS,RHS);
     VCCS_assigner(node_vs,node_vd,node_vs,node_vb,gmb,LHS); // assigning gmb
     R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
     VCCS_assigner(node_vs,node_vd,node_vs,node_vg,gm,LHS); // # assigning gm
+
+    return id;
 }
 
 void RingOscillatorStages(double W,double L,double R, double C,arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
@@ -541,13 +527,13 @@ void C_assigner(int node_x,int node_y,double C, double h, arma::mat &LHS, arma::
     double x1 = 0;
 
     if(mode>0){
-        x = C/h;
+        x = 2*C/h;
         if(node_x == 0){
-            x1 = C*(solution(node_y-1,0))/h;
+            x1 = 2*C*(solution(node_y-1,0))/h;
         }else if(node_y == 0){
-            x1 = C*(solution(node_x-1,0))/h;
+            x1 = 2*C*(solution(node_x-1,0))/h;
         }else{
-            x1 = C*(solution(node_x-1,0)-solution(node_y-1,0))/h;
+            x1 = 2*C*(solution(node_x-1,0)-solution(node_y-1,0))/h;
         }
     }
     else{
@@ -580,6 +566,13 @@ double V_pulse(double V1, double V2, double &t1,double td, double tr, double tf,
     return V_t1;
 }
 
+double Vstep_Source(double &V_start, double V_step, double h){
+    V_start = V_start + h;
+    return V_start;
+}
+
+
+
 // Diode stamp assigner
 void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, double h, arma::mat &LHS, arma::mat &RHS, arma::mat solution, int mode){
     int col_size = LHS.n_cols;
@@ -590,8 +583,6 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
     double x2 = 0;
     double val_nodex = 0;
     double val_nodey = 0;
-
-    
 
     if(mode == 0){
         cd = 0;
@@ -621,7 +612,7 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
 }
 
 // Newton Raphson system solver for non-linear and dynamic elements
-arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RHS, arma::mat LHS, arma::mat RHS, arma::mat &solution, double h, int mode){
+arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RHS, arma::mat LHS, arma::mat RHS, arma::mat &solution, double &h, int mode){
     int col_size = LHS.n_cols;
     int row_size = LHS.n_rows;
     double eps_val = 1e-8;

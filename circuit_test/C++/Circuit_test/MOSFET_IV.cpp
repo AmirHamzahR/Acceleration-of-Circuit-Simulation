@@ -21,13 +21,17 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Number of MOSFETs and cascaded levels are assigned above too. External nodes are the nodes which  */
-int const code = 0;
-int const external_nodes = 1; // Number of external nodes (excluding ground and ring oscillator loop nodes)
+int const code = 1;
+double W = 500e-9;
+double L = 50e-9;
+
+int const external_nodes = 4; // Number of external nodes (excluding ground and ring oscillator loop nodes)
 int const external_mosfets = 0; // Number of standalone mosfets (excluding mosfets from ring oscillator)
-int const cascaded_level = 3; // Number of cascaded ring oscillators 
+int const cascaded_level = 0; // Number of cascaded ring oscillators 
 int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
-int const no_of_mosfets = external_mosfets  + 2*cascaded_level;// Total number of MOSFETs
-int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
+int const no_of_mosfets = external_mosfets;// Total number of MOSFETs
+
+int const T_nodes = external_nodes + 4*no_of_mosfets;
 
 #include "Transient_code.h"
 
@@ -42,24 +46,7 @@ int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
     // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner, RingOscillatorStages)
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    // double W = 100e-6;
-    // double L = 100e-6;
-    RingOscillatorStages(100e-6, 100e-6, 1e3, 1e-15, LHS, RHS, solution, h, mode);
-
-    // the ring oscillator stages are assigned in the following order:
-
-    // PMOS_assigner(1, supply_voltage_node, 2, 3, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(2, 3, 2, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(3, 4, 1e3, LHS, RHS);
-    // C_assigner(0, 4, 10e-12, h, LHS, RHS, solution, mode);
-    // PMOS_assigner(3, supply_voltage_node, 4, 5, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(4, 5, 4, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(5, 6, 1e3, LHS, RHS);
-    // C_assigner(0, 6, 10e-12, h, LHS, RHS, solution, mode);
-    // PMOS_assigner(5, supply_voltage_node, 6, 7, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(6, 7, 6, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(7, 2, 1e3, LHS, RHS);
-    // C_assigner(0, 2, 10e-12, h, LHS, RHS, solution, mode);
+    NMOS_assigner(1,3,2,0,0,W,L,h,solution,LHS,RHS,mode);
     
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
@@ -78,25 +65,20 @@ int main(int argc, const char ** argv){
 
     // TRANSIENT SIMULATION SETTINGS
     // The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
-    int n = 5001; // 5001 seems to be the sweet spot
+    
     int i = 0;
-    // Defining the Time and Timestep for Transient Simulation
-    double t_start = 0;
-    double t_end = 10e-9;
-    double t = t_end - t_start;
-    double h_time = t/(n-1); // Timestep for the time vector
+    int n = 5001; // Number of iterations 
+    // Defining the voltage step settings for VDS
+    double V1_start = 0;
+    double V1_end = 30;
+    double V1_step = 0.1; // Voltage increment
+    double h = (V1_end-V1_start)/(n);
+    
+    // Defining the voltage settings for VGS
+    double VGS_value = 10;
 
-    //Simple timestep control (not perfect)
-    double h = 0; // Max timestep for transient simulation
-    if(t_end > 10e-9){
-        h = t/((n-1)/3);
-    }
-    else{
-        h = 2e-11;
-    }
-    std::cout << h << std::endl;
-    // time vector to be inputted in plot for python analysis
-    arma::mat time = arange(t_start,h_time,n);
+    // voltage step vector to be inputted in plot for python analysis
+    arma::mat volt_step = arange(V1_start,h,n);
     
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // ASSIGNING THE STAMPS TO THE LHS AND RHS MATRICES
@@ -107,33 +89,24 @@ int main(int argc, const char ** argv){
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE RESISTOR STAMP (R_assigner)
-    // R_assigner(1,2,3e3,LHS,RHS);
+    R_assigner(1,2,220,LHS,RHS);
+    R_assigner(3,4,10,LHS,RHS);
+
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ASSIGNING THE CURRENT STAMP (Is_assigner, VCCS_assigner)
 
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    // ASSIGNING THE VOLTAGE SOURCES (Vs_assigner)
-    // Pulse voltage settings
-    // double t1 = 0; // time used for the loop
-    // double V1 = 2;
-    // double V2 = 6;
-    // double td = 1e-3;
-    // double tr = 0.5e-3;
-    // double tf = 0.2e-3;
-    // double tpw = 2e-3;
-    // double tper = 4e-3;
-
     // Assigning DC voltage sources
-    Vs_assigner(supply_voltage_node,0,5,LHS,RHS); // supply voltage for the ring oscillator, vdd
+    Vs_assigner(1,0,VGS_value,LHS,RHS); // vgs
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)
-    // std::vector<double> RHS_locate = {
-    //     // Assigning the voltage matrix on LHS and RHS for the pulse voltage
-    //     Vs_assigner(1,0,V1,LHS,RHS)
-    // };
+    std::vector<double> RHS_locate = {
+        // Assigning the voltage matrix on LHS and RHS for the pulse voltage
+        Vs_assigner(4,0,V1_start,LHS,RHS) // vds
+    };
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // Checking the LHS and RHS matrices
     LHS.print("LHS matrix =");
@@ -151,50 +124,45 @@ int main(int argc, const char ** argv){
     
     // OP analysis used as initial condition for next evaluation
     arma::vec solution= arma::zeros(Maxi,Maxj);
-    solution = NewtonRaphson_system(init_LHS,init_RHS,LHS,RHS,solution,h,mode);
-    solution.print("The OP analysis of the circuit is: ");
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // The solution csv that is going to be plotted which contains the values of nodal voltages
     // and voltage source currents
-    arma::vec solution_csv = arma::ones(n*Maxi,1);
-    arma::vec Max_I = arma::zeros(1,1);
-    Max_I.row(0).col(0) = Maxi;
+    arma::vec id_csv = arma::ones(n,1);
+
     int iter = 0;
+    solution = NewtonRaphson_system(init_LHS,init_RHS, LHS, RHS, solution,h,mode);
+    id_csv[0] = NMOS_assigner(1,3,2,0,0,W,L,h,solution,LHS,RHS,mode);
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    // ADDING TRANSIENT SIMULATION LOOP (includes V_pulse or any time dependent sources)
-    mode = 1;
+    // ADDING VOLTAGE STEPPING LOOP
+    
     while(i < n){
         
         LHS = init_LHS;
         RHS = init_RHS;
-
-        // std::vector<double> RHS_value = {
-        //     V_pulse(V1,V2,t1,td,tr,tf,tpw,tper,h)
-        // };
-        // RHS = RHS_update(RHS_locate, init_RHS, RHS_value);
-
+        
+        std::vector<double> RHS_value = {
+            Vstep_Source(V1_start,V1_step,h) // VDS
+        };
+        RHS = RHS_update(RHS_locate, init_RHS, RHS_value);
         // Calling the Newton-Raphson system here
         solution = NewtonRaphson_system(init_LHS,init_RHS, LHS, RHS, solution,h,mode);
+        
         // Assigning the variables that will be plotted and analysed as seen in a circuit simulator
-        for(int a = 0; a<Maxi; a++){
-            solution_csv[iter+a] = solution[a];
-        }
+        id_csv[i] = NMOS_assigner(1,3,2,0,0,W,L,h,solution,LHS,RHS,mode);
+        
         i++;
         iter += Maxi;
+        
     }
     /*-----------------------------------------------------------------------------------------------------------*/
     // SAVING THE SOLUTION AND TIME MATRICES INTO CSV FILES
-    std::ofstream file("solution.csv");
-    file << "X_matrix" << std::endl;
-    solution_csv.save(file, arma::csv_ascii);
+    std::ofstream file("id.csv");
+    file << "id_matrix" << std::endl;
+    id_csv.save(file, arma::csv_ascii);
     file.close();
-    std::ofstream file2("MaxI.csv");
-    file2 << "Max_I" << std::endl;
-    Max_I.save(file2, arma::csv_ascii);
-    file2.close();
-    std::ofstream file3("time.csv");
-    file3 << "time" << std::endl;
-    time.save(file3, arma::csv_ascii);
+    std::ofstream file3("VDS_step.csv");
+    file3 << "VDS_step" << std::endl;
+    volt_step.save(file3, arma::csv_ascii);
     file3.close();
 
     return 0;
