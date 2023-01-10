@@ -825,7 +825,7 @@ It is a success for the C++ code on simulating the ring oscillator. The simulati
 
 From this point forward, the C++ code is ready to be tested for benchmarking purposes.
 
-## 2/1/2022
+## 2/1/2023
 
 The ring oscillator model need to be changed since the model used before is not a correct ring oscillator. A new model have been changed which follows the normal ring oscillator format with the NOT gates cascaded on odd number of stages with resistors and capacitors included for each stages. The circuit of the ring oscillator is shown below.
 
@@ -843,7 +843,7 @@ C++ simulation for 3 stage ring oscillator (vdd=1V)
 
 It can be seen that the shape of the graphs are similar but the values oscillates at different voltages. In fact, the C++ code oscillates around the negative region too which should not happen for a normal ring oscillator without any negative voltages. This means that there is some error inside the C++ code which makes it oscillate around the negative region. 
 
-## 3/1/2022
+## 3/1/2023
 
 After a thorough process of debugging, it seems that the C_assigner function had some error that was caused because the Is_assigner had been changed before. Before this, it the Is_assigner had different polarities but it was actually wrong according to the MNA stamps. After changing the polarity of the Is_assigner, the C_assigner's current assigner had not changed. This caused the current to constantly add and subtract at that makes it oscillate around 0. After changing the polarity of the current in C_assigner, the capacitor can be modeled correctly again.
 
@@ -860,4 +860,119 @@ C++ simulation for 3 stage ring oscillator (vdd=5V)
 Both simulation is now similar to each other which oscillates from around 0.5V to 4.4V. The C++ code however has a slightly different peak voltage of 4.6V which leads to an accuracy of 96.356%. The frequency is quite different compared to the LTSpice simulation with the C++ frequency being a bit low. After testing the C++ code with higher number of Newton-Raphson iteration, it seems that the frequency increases slightly but not that much. The inaccuracy of the frequency could be due to the lack of time-step control in this code. The speed of the simulation is also quite slow compared to LTSpice for the 3 stage ring oscillator. This could be improved in the future with more time-step controls and better code optimization. 
 
 Thus, the code is now ready for benchmarking on the number of ring oscillator stages and the C++ optimizations such as -O1 and -O3.
+
+## 5/1/2023
+
+After having a meeting with Dr. Danial, the ring oscillator codes were tested and debug using different parameters for the ring oscillator. It turns out that the code contains some bugs when it goes to a lower time frame at around 1e-9s. This made the code inaccurate since the plot of the graph is found to be dependent on the simulation time. Other than that, the internal parameters of the MOSFET should also be tested using a different circuit since it is not quite sure if the internal parameters are working accurate enough. The internal parameters includes the KP, W, L, Vto, etc. To test this, a new main.cpp code will be created which would see the behaviour of the MOSFET models using the IV curve. 
+
+## 7/1/2023
+
+The new main C++ code has been created which is named as MOSFET_IV.cpp. In this code, the arange function that is used for creating the time vector is now used to create a voltage sweep source. The voltage sweep source that will be used in the circuit is at the VDS. This is because the behaviour of MOSFETs in the IV curve is mainly due to the relationship between id, VDS, and VGS. In this scenario, the id will be used as the y-axis and the VDS will then be the x-axis. The VGS will have some change of incremental change in value that would satisfy the IV curve characteristics. The id is created as a vector that is returned from the NMOS_assigner function. The id vector is updated by replacing the position of the solution vector from the Transient_code.cpp format. So, the id vector and VGS vector will be the y and x variables plotted on the graph respectively.
+
+For this test, the following circuit is used to see the behaviour of the NMOS model in the IV curve.
+
+![](circuit_test/C++/NMOS_IV_circuit.png)
+
+The circuit contains two voltage sources with VDS being higher than the VGS to see how the id current would pass through different regions of operations. These region of operations are cut-off, linear and saturation regions. If it follows the curve, it means that the code is working properly. For reliable analysis, a comparison between LTSpice and C++ is made. The first simulation is done with 10V for VGS, 0 to 30V with 0.1V increment for VDS, and using the default internal parameters of the MOSFET.
+
+![](circuit_test/C++/NMOS_IV_char.png)
+
+LTSpice default NMOS IV curve
+
+![](circuit_test/C++/NMOS_IV_char_cpp.png)
+
+C++ default NMOS IV curve
+
+The turqoise line in the LTSpice simulation is compared with the C++ code because it is at 10V for VGS. It can be seen that the id curve satisfy the normal behaviour of the id currnet which includes the cut-off, linear, and saturation region.  For further concrete testing on the internal parameters of the NMOS model, a change of the internal parameter values were done. These changes are done for Vto = 0.7V and LAMBDA = 0.1. The VDS voltage sweep source stays the same but another voltage sweep source is used for the VGS from 0 to 10V with increments of 5V. However, the looping technique of using two sweep sources were quite hard to be done in C++ so only one sweep source is used with different values of VGS tested in the C++ code. The analysis is then done below for the NMOS model.
+
+![](circuit_test/C++/NMOS_IV_char3.png)
+
+LTSpice simulation for IV curve of NMOS (VGS stepping 0 to 10V with 5V increment)
+
+![](circuit_test/C++/NMOS_IV_0V_cpp.png)
+![](circuit_test/C++/NMOS_IV_5V_cpp.png)
+![](circuit_test/C++/NMOS_IV_10V_cpp.png)
+
+C++ code simulation for IV curve of NMOS (VGS varying 0 to 10V with 5V increment)
+
+Both C++ and LTSpice gave the same results for the changed internal parameters which means that my C++ code is align with the NMOS model on the LTSpice standard. To further confirm this, another testing with different values for width and length of the MOSFET is done. The W and L is chosen to be 500e-9 and 50e-9 respectively. The simulation made from LTSpice and C++ is shown below.
+
+![](circuit_test/C++/NMOS_IV_500n50n_lt.png)
+
+LTSpice simulation for IV curve of NMOS (W = 500e-9 L = 50e-9)
+
+![](circuit_test/C++/NMOS_IV_500n50n_cpp.png)
+
+C++ simulation for IV curve of NMOS (W = 500e-9 L = 50e-9)
+
+Both simulations are seen to be the same which means that the NMOS model is certainly correct. Now, the PMOS model can be tested using the same methods as shown before for the IV curve. The circuit used for testing the PMOS model is the same as the NMOS model except that the NMOS is replaced by the PMOS, VGS is changed from 0 to -10V with -5V increment, and VDS is changed from 0 to -30 V with -0.1V increment. The internal parameters are also changed for Vto which is -0.7 but the LAMBDA stays at 0.1V. The analysis of LTSpice and C++ simulation can be seen below.
+
+![](circuit_test/C++/PMOS_IV_char3_lt.png)
+
+LTSpice simulation for IV curve of PMOS (VGS stepping 0 to -10V with -5V increment)
+
+![](circuit_test/C++/PMOS_IV_n10V_cpp.png)
+![](circuit_test/C++/PMOS_IV_n5V_cpp.png)
+![](circuit_test/C++/PMOS_IV_0V_cpp.png)
+
+C++ code simulation for IV curve of PMOS (VGS varying 0 to -10V with -5V increment)
+
+The C++ code can be seen to be in the opposite direction but this is actually due to the x-axis going from right to left instead of the usual left to right since the python axis is formatted in that way. The values are still the same for both plots which means that the PMOS model is also working correctly as intended. For further confirmation, the W and L will also be changed to 500e-9 and 50e-9 respectively. The analysis can be done with the simulations as shown below.
+
+![](circuit_test/C++/PMOS_IV_500n50n_lt.png)
+
+LTSpice simulation for IV curve of PMOS (W = 500e-9 L = 50e-9)
+
+![](circuit_test/C++/PMOS_IV_500n50n_cpp.png)
+
+C++ simulation for IV curve of PMOS (W = 500e-9 L = 50e-9)
+
+The simulation from C++ and LTSpice are also the same. This means that the PMOS and NMOS model are accurately done which is up to the SPICE software standards. However, the internal capacitors were not included in this simulation since it is only done using the DC point analysis. The analysis for the internal capacitors and their relationship with the amount of time taken for transient analysis variable, t_end, will be done next.
+
+## 8/1/2023
+
+To test this out, I have done multiple simulation using the ring oscillator code which is then compared to the LTSpice simulation. It seems that the values of the plot are affected by t_end variable because the oscillations are mainly caused by the capacitors in the circuit. This is due to the capacitor models that are mainly tied to the time stepping variable, h, in the circuit. Furthermore, the h variable is mainly defined using the t_end variable per amount of iterations that will be done which is n. Due to this, I had to separate create another h which is called h_time for the arange function that creates the time vector and another h to be used for the capacitor models. 
+
+After researching regarding the relationship between h, capacitor model, and transient analysis, it seems that the error that is causing all of this is due to the lack of timestep control which is discussed in this (study)[https://uweb.engr.arizona.edu/~ece570/session8.pdf]. I have also tried to create an algorithm for the timestep control but it is actually a bit hard to implement on this small timeframe since the timestep algorithm for the Local Truncation Error (LTE) uses a lot of polynomials and integration. 
+
+Due to this, I figured out an idea which acts as a temporary timestep control for my circuit simulation. This is created after a lot of manual simulation and analysis regarding the behaviour of ring oscillators. The h variable that is used for the capacitor model is situated in an if-else statement which depends on the t_end variable. If the t_end is smaller than the time of the usual occurance of the convergence error, the h will be changed to a value that is enough to run the create a graph that has less errors and accurate representation compared to LTSpice simulation. After making multiple versions of the if-else timestep control for the h, it has now reached its optimal form but it is still far from being close to the actual timestep control algorithm for the LTE. 
+
+The simulation analysis of different parameters for ring oscillators can now be done for the C++ code to confirm that it is working without any bugs compared to before. The first circuit that will be tested is a 3rd stage ring oscillators with W = 500e-6, L = 50e-6, Vto = +/-0.7, LAMBDA = 0.1, R_oscillator = 1e3, and C = 10e-12. The t_end chosen for this is 10e-6s. The results of this analysis is shown below.
+
+![](circuit_test/C++/3rd_RO_500en6_10en6_lt.png)
+
+LTSpice simulation for 3rd stage ring oscillator
+
+![](circuit_test/C++/3rd_RO_500en6_10en6_cpp.png)
+
+C++ simulation for 3rd stage ring oscillator
+
+It can be seen that the simulations are the same for both LTSpice and C++ code but the frequency of the C++ code is a bit different. This could be due to the less efficient method of time step control that was created for the C++ code. However, the peak voltage values are the same for both LTSpice and C++ simulations. This is as close as to an accurate an efficient simulation that the temporary timestep control can come close to. However, this could also be due to the different internal parameters of the MOSFET model during transient analysis in LTSpice. With the peak voltage being around 96% accuracy, higher cascaded levels of the ring oscillator can now be simulated. This is done for 5th and 7th stage of the ring oscillator with the same internal parameters.
+
+![](circuit_test/C++/5th_RO_500en6_10en6_lt.png)
+![](circuit_test/C++/7th_RO_500en6_10en6_lt.png)
+
+LTSpice simulation for 5th and 7th stage ring oscillator
+
+![](circuit_test/C++/5th_RO_500en6_10en6_cpp.png)
+![](circuit_test/C++/7th_RO_500en6_10en6_cpp.png)
+
+C++ simulation for 5th and 7th stage ring oscillator
+
+The 5th and 7th stage simulation for both plots are seen to have the same peak voltage value too with also slight difference in frequency which is similar to the plot before. Since these simulation is only done for 10e-6s timeframe, another testing with a really low timeframe must be done to ensure that the convergence error is reduced compared to before. 
+
+The circuit parameters are now changed to 3rd, 5th and 7th stage ring oscillator with internal parameters of W = 500e-9, L = 50e-9, Vto = +/-0.7, LAMBDA = 0.1, R_oscillator = 1e3, and C = 1e-15. For this simulation, the timeframe must be reduced because the capacitor used for the ring oscillator is really small. The t_end chosen for this is 1e-9s. The 
+
+![](circuit_test/C++/3rd_RO_500en9_10en9_lt.png)
+![](circuit_test/C++/5th_RO_500en9_10en9_lt.png)
+![](circuit_test/C++/7th_RO_500en9_10en9_lt.png)
+
+LTSpice simulation for 3rd, 5th and 7th stage ring oscillator
+
+![](circuit_test/C++/3rd_RO_500en9_10en9_cpp.png)
+![](circuit_test/C++/5th_RO_500en9_10en9_cpp.png)
+![](circuit_test/C++/7th_RO_500en9_10en9_cpp.png)
+
+C++ simulation for 3rd, 5th and 7th stage ring oscillator
+
 
