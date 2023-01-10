@@ -981,14 +981,34 @@ The benchmarking was finally done using the chrono library in C++ that contains 
 
 The two compiler optimizations that will be used are -O1 and -O3. As a start, the -O0 was chosen for the initial point of comparison between the three optimization levels since -O0 does not turn on any of the optimization flags. However, after testing it in the code, it is too slow to perform even the normal 3rd stage to 5th stage ring oscillator levels. Due to this, the benchmarking will only compare between -O1 and -O3 levels which is reliable enough to see how well the vector calculations could be accelerated from the compiler optimizations. The circuits used for this optimization is from the analysis done before which are the circuits simulated at 10e-6s and 1e-9s simulation time. 
 
-Benchmark circuit	Matrix size (n x n)	Average execution time / ms (DC)								Speedup
-		O1				O3				
-		1st	2nd	3rd	Average	1st	2nd	3rd	Average	
-3rd_RO_W500u_C10p	31 x 31	2.2397	2.2585	3.6642	2.7208	1.9296	2.1432	1.87	1.5443	1.761833841
-5th_RO_W500u_C10p	51 x 51	9.3578	10.1375	6.8034	8.766233333	5.8458	6.1205	8.045	6.670433333	1.314192481
-9th_RO_W500u_C10p	91 x 91	44.6022	39.2859	38.8501	40.91273333	29.0839	28.8663	34.5725	30.8409	1.326573911
-3rd_RO_W500n_C1f	31 x 31	2.4085	2.7211	1.6771	2.2689	1.6579	1.1887	1.7863	1.5443	1.469209351
-5th_RO_W500u_C1f	51 x 51	6.958	9.1434	11.8503	9.317233333	7.0543	4.7079	8.1161	6.6261	1.40614137
-9th_RO_W500u_C1f	91 x 91	35.8594	33.8426	66.2105	45.30416667	29.7616	33.7347	30.1597	31.21866667	1.451188392
-Average Speedup for DC 										1.454856558
+The circuits are named using the format of OscillatorStage_RingOscillator_WidthofOscillator_CapacitorValue to differentiate each other. The parameters used are the same as before which are Vto = +/-0.7, LAMBDA = 0.1, and R_oscillator = 1e3. An example of this naming nomenclature for a 5th Stage Ring OScillator with W = 500e-6, L = 50e-6, C = 10e-12, and same other parameters is 5th_RO_W500u_C10p. Other circuits are also created for W = 500e-9 and different number of stages up to 9th stage ring oscillator. The benchmarking is done in Transient_code.cpp and the table results can be seen below.
 
+| Benchmark circuit       | Matrix size (n x n) | Average execution time / ms (DC) |         |         |             |         |         |         |             | Speedup     |
+|-------------------------|---------------------|----------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
+|                         |                     | O1                               |         |         |             | O3      |         |         |             |             |
+|                         |                     | 1st                              | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
+| 3rd_RO_W500u_C10p       | 31 x 31             | 2.2397                           | 2.2585  | 3.6642  | 2.7208      | 1.9296  | 2.1432  | 1.87    | 1.5443      | 1.761833841 |
+| 5th_RO_W500u_C10p       | 51 x 51             | 9.3578                           | 10.1375 | 6.8034  | 8.766233333 | 5.8458  | 6.1205  | 8.045   | 6.670433333 | 1.314192481 |
+| 9th_RO_W500u_C10p       | 91 x 91             | 44.6022                          | 39.2859 | 38.8501 | 40.91273333 | 29.0839 | 28.8663 | 34.5725 | 30.8409     | 1.326573911 |
+| 3rd_RO_W500n_C1f        | 31 x 31             | 2.4085                           | 2.7211  | 1.6771  | 2.2689      | 1.6579  | 1.1887  | 1.7863  | 1.5443      | 1.469209351 |
+| 5th_RO_W500u_C1f        | 51 x 51             | 6.958                            | 9.1434  | 11.8503 | 9.317233333 | 7.0543  | 4.7079  | 8.1161  | 6.6261      | 1.40614137  |
+| 9th_RO_W500u_C1f        | 91 x 91             | 35.8594                          | 33.8426 | 66.2105 | 45.30416667 | 29.7616 | 33.7347 | 30.1597 | 31.21866667 | 1.451188392 |
+| Average Speedup for DC  |                     |                                  |         |         |             |         |         |         |             | 1.454856558 |
+
+Benchmarking results for DC OP analysis calculation in each circuit using -O1 and -O3
+
+| Benchmark circuit             | Matrix size (n x n) | Average execution time / s (Transient) |         |         |             |         |         |         |             | Speedup     |
+|-------------------------------|---------------------|----------------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
+|                               |                     | O1                                     |         |         |             | O3      |         |         |             |             |
+|                               |                     | 1st                                    | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
+| 3rd_RO_W500u_C10p             | 31 x 31             | 3.94357                                | 3.28237 | 3.39568 | 3.54054     | 2.47192 | 2.67866 | 2.4313  | 2.444726667 | 1.448235522 |
+| 5th_RO_W500u_C10p             | 51 x 51             | 13.8224                                | 12.7408 | 12.2163 | 12.9265     | 8.48657 | 8.71415 | 8.8508  | 8.68384     | 1.488569573 |
+| 9th_RO_W500u_C10p             | 91 x 91             | 67.3956                                | 66.0927 | 64.5124 | 66.00023333 | 43.9729 | 43.3128 | 48.7485 | 45.34473333 | 1.455521479 |
+| 3rd_RO_W500n_C1f              | 31 x 31             | 3.67762                                | 3.60141 | 4.03486 | 3.771296667 | 2.45145 | 2.39937 | 2.48336 | 2.444726667 | 1.542625079 |
+| 5th_RO_W500n_C1f              | 51 x 51             | 11.7041                                | 11.803  | 13.2038 | 12.23696667 | 7.6851  | 8.0352  | 9.49535 | 8.405216667 | 1.4558776   |
+| 9th_RO_W500n_C1f              | 91 x 91             | 71.1792                                | 65.957  | 67.3671 | 68.16776667 | 46.916  | 49.8386 | 49.3957 | 48.71676667 | 1.399267056 |
+| Average Speedup for Transient |                     |                                        |         |         |             |         |         |         |             | 1.465016051 |
+
+Benchmarking results for Transient Analysis calculation in each circuit using -O1 and -O3
+
+It can be seen that the average speedup is of x1.45 to x1.46 which is an increase of 45-46% performance for the matrix calculations using the Armadillo library in Intel i7 9th Gen processor. This can be studied even further if timestep control is properly made which could actually reduce the time taken to solve the matrices since the LTE will be significantly lower. A future aspect of this project could also involve accelerating this using GPU and even FPGA to test the capability of the code.
