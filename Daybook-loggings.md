@@ -961,18 +961,16 @@ C++ simulation for 5th and 7th stage ring oscillator
 
 The 5th and 7th stage simulation for both plots are seen to have the same peak voltage value too with also slight difference in frequency which is similar to the plot before. Since these simulation is only done for 10e-6s timeframe, another testing with a really low timeframe must be done to ensure that the convergence error is reduced compared to before. 
 
-The circuit parameters are now changed to 3rd, 5th and 7th stage ring oscillator with internal parameters of W = 500e-9, L = 50e-9, Vto = +/-0.7, LAMBDA = 0.1, R_oscillator = 1e3, and C = 1e-15. For this simulation, the timeframe must be reduced because the capacitor used for the ring oscillator is really small. The t_end chosen for this is 1e-9s. The 
+The circuit parameters are now changed to 3rd and 5th stage ring oscillator with internal parameters of W = 500e-9, L = 50e-9, Vto = +/-0.7, LAMBDA = 0.1, R_oscillator = 1e3, and C = 1e-15. For this simulation, the timeframe must be reduced because the capacitor used for the ring oscillator is really small. The t_end chosen for this is 1e-9s. The 
 
 ![](circuit_test/C++/3rd_RO_500en9_1en9_lt.png)
 ![](circuit_test/C++/5th_RO_500en9_1en9_lt.png)
-![](circuit_test/C++/7th_RO_500en9_1en9_lt.png)
 
-LTSpice simulation for 3rd, 5th and 7th stage ring oscillator
+LTSpice simulation for 3rd and 5th stage ring oscillator
 
 ![](circuit_test/C++/3rd_RO_500en9_1en9_cpp.png)
 ![](circuit_test/C++/5th_RO_500en9_1en9_cpp.png)
-![](circuit_test/C++/7th_RO_500en9_1en9_cpp.png)
 
-C++ simulation for 3rd, 5th and 7th stage ring oscillator
+C++ simulation for 3rd and 5th stage ring oscillator
 
 The simulations are also seen to be the same for the peak voltage with slight difference in frequency. It can be seen that there are no convergence error now compared to before after the temporary timestep control has been made. Thus, this circuit is now applicable to be used for benchmarking purposes. 
