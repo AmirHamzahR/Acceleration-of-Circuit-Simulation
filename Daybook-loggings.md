@@ -998,7 +998,7 @@ The circuits are named using the format of OscillatorStage_RingOscillator_Widtho
 
 Benchmarking results for DC OP analysis calculation in each circuit using -O1 and -O3
 
-| **Benchmark circuit**   | **Matrix size (n x n)** | **Average execution time / ms (DC)** |     |     |         |     |     |     |        | **Speedup** |
+| **Benchmark circuit**   | **Matrix size (n x n)** | **Average execution time / s (Transient)** |     |     |         |     |     |     |        | **Speedup** |
 |-------------------------------|---------------------|----------------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
 |                         |                         | O1                                   |         |         |             | O3      |         |         |             |             |
 |                         |                     | 1st                                    | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
@@ -1012,4 +1012,4 @@ Benchmarking results for DC OP analysis calculation in each circuit using -O1 an
 
 Benchmarking results for Transient Analysis calculation in each circuit using -O1 and -O3
 
-It can be seen that the average speedup is of x1.45 to x1.46 which is an increase of 45-46% performance for the matrix calculations using the Armadillo library in Intel i7 9th Gen processor. This can be studied even further if timestep control is properly made which could actually reduce the time taken to solve the matrices since the LTE will be significantly lower. A future aspect of this project could also involve accelerating this using GPU and even FPGA to test the capability of the code.
+It can be seen that the average speedup is of x1.45 to x1.47 which is an increase of 45-47% performance for the matrix calculations using the Armadillo library with an Intel i7 9th Generation processor. This can be studied even further if timestep control is properly made which could actually reduce the time taken to solve the matrices since the LTE will be significantly lower. A future aspect of this project could also involve accelerating this using GPU and even FPGA to test the capability of the code.
