@@ -983,9 +983,9 @@ The two compiler optimizations that will be used are -O1 and -O3. As a start, th
 
 The circuits are named using the format of OscillatorStage_RingOscillator_WidthofOscillator_CapacitorValue to differentiate each other. The parameters used are the same as before which are Vto = +/-0.7, LAMBDA = 0.1, and R_oscillator = 1e3. An example of this naming nomenclature for a 5th Stage Ring OScillator with W = 500e-6, L = 50e-6, C = 10e-12, and same other parameters is 5th_RO_W500u_C10p. Other circuits are also created for W = 500e-9 and different number of stages up to 9th stage ring oscillator. The benchmarking is done in Transient_code.cpp and the table results can be seen below.
 
-| Benchmark circuit       | Matrix size (n x n) | Average execution time / ms (DC) |         |         |             |         |         |         |             | Speedup     |
+| Benchmark circuit       | Matrix size (n x n) |  |    Average execution time / ms (DC)     |         |             |         |         |         |             | Speedup     |
 |-------------------------|---------------------|----------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
-|                         |                     | O1                               |         |         |             | O3                  |         |      |     |             |
+|                         |                     |                                |    O1     |         |             |                   |    O3     |      |     |             |
 |                         |                     | 1st                              | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
 | 3rd_RO_W500u_C10p       | 31 x 31             | 2.2397                           | 2.2585  | 3.6642  | 2.7208      | 1.9296  | 2.1432  | 1.87    | 1.5443      | 1.761833841 |
 | 5th_RO_W500u_C10p       | 51 x 51             | 9.3578                           | 10.1375 | 6.8034  | 8.766233333 | 5.8458  | 6.1205  | 8.045   | 6.670433333 | 1.314192481 |
@@ -997,9 +997,9 @@ The circuits are named using the format of OscillatorStage_RingOscillator_Widtho
 
 Benchmarking results for DC OP analysis calculation in each circuit using -O1 and -O3
 
-| Benchmark circuit             | Matrix size (n x n) | Average execution time / s (Transient) |         |         |             |         |         |         |             | Speedup     |
+| Benchmark circuit             | Matrix size (n x n) |  |    Average execution time / s (Transient)     |         |             |         |         |         |             | Speedup     |
 |-------------------------------|---------------------|----------------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
-|                               |                     | O1                                     |         |         |             | O3      |         |         |             |             |
+|                               |                     |                                      |     O1    |         |             |       |     O3    |         |             |             |
 |                               |                     | 1st                                    | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
 | 3rd_RO_W500u_C10p             | 31 x 31             | 3.94357                                | 3.28237 | 3.39568 | 3.54054     | 2.47192 | 2.67866 | 2.4313  | 2.444726667 | 1.448235522 |
 | 5th_RO_W500u_C10p             | 51 x 51             | 13.8224                                | 12.7408 | 12.2163 | 12.9265     | 8.48657 | 8.71415 | 8.8508  | 8.68384     | 1.488569573 |
