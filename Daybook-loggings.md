@@ -975,4 +975,4 @@ LTSpice simulation for 3rd, 5th and 7th stage ring oscillator
 
 C++ simulation for 3rd, 5th and 7th stage ring oscillator
 
-
+The simulations are also seen to be the same for the peak voltage with slight difference in frequency. It can be seen that there are no convergence error now compared to before after the temporary timestep control has been made. Thus, this circuit is now applicable to be used for benchmarking purposes. 
