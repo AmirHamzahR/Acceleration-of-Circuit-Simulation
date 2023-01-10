@@ -974,3 +974,21 @@ LTSpice simulation for 3rd and 5th stage ring oscillator
 C++ simulation for 3rd and 5th stage ring oscillator
 
 The simulations are also seen to be the same for the peak voltage with slight difference in frequency. It can be seen that there are no convergence error now compared to before after the temporary timestep control has been made. Thus, this circuit is now applicable to be used for benchmarking purposes. 
+
+## 9/1/2023
+
+The benchmarking was finally done using the chrono library in C++ that contains a function that could call in the time with the shortest tick period possible. This is shown in the C++ documentation [here](https://en.cppreference.com/w/cpp/chrono). The high_resolution_clock function will be used to benchmark between the calculation on solving the vectors and matrices inside the code. These are situated between the DC OP point which is at the first time NewtonRaphsonSystem() is called and then other is when the while loop for the transient analysis is called. Thus, those two points can be benchmarked to see if those calculations can be optimized by using compiler optimizations which can be found from this [document](https://gcc.gnu.org/onlinedocs/gcc/Optimize-Options.html).
+
+The two compiler optimizations that will be used are -O1 and -O3. As a start, the -O0 was chosen for the initial point of comparison between the three optimization levels since -O0 does not turn on any of the optimization flags. However, after testing it in the code, it is too slow to perform even the normal 3rd stage to 5th stage ring oscillator levels. Due to this, the benchmarking will only compare between -O1 and -O3 levels which is reliable enough to see how well the vector calculations could be accelerated from the compiler optimizations. The circuits used for this optimization is from the analysis done before which are the circuits simulated at 10e-6s and 1e-9s simulation time. 
+
+Benchmark circuit	Matrix size (n x n)	Average execution time / ms (DC)								Speedup
+		O1				O3				
+		1st	2nd	3rd	Average	1st	2nd	3rd	Average	
+3rd_RO_W500u_C10p	31 x 31	2.2397	2.2585	3.6642	2.7208	1.9296	2.1432	1.87	1.5443	1.761833841
+5th_RO_W500u_C10p	51 x 51	9.3578	10.1375	6.8034	8.766233333	5.8458	6.1205	8.045	6.670433333	1.314192481
+9th_RO_W500u_C10p	91 x 91	44.6022	39.2859	38.8501	40.91273333	29.0839	28.8663	34.5725	30.8409	1.326573911
+3rd_RO_W500n_C1f	31 x 31	2.4085	2.7211	1.6771	2.2689	1.6579	1.1887	1.7863	1.5443	1.469209351
+5th_RO_W500u_C1f	51 x 51	6.958	9.1434	11.8503	9.317233333	7.0543	4.7079	8.1161	6.6261	1.40614137
+9th_RO_W500u_C1f	91 x 91	35.8594	33.8426	66.2105	45.30416667	29.7616	33.7347	30.1597	31.21866667	1.451188392
+Average Speedup for DC 										1.454856558
+
