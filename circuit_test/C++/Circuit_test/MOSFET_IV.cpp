@@ -21,7 +21,7 @@
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Number of MOSFETs and cascaded levels are assigned above too. External nodes are the nodes which  */
-int const code = 1;
+int const code = 1; // choosing code for IV_curve
 double W = 500e-9;
 double L = 50e-9;
 
@@ -133,8 +133,7 @@ int main(int argc, const char ** argv){
     solution = NewtonRaphson_system(init_LHS,init_RHS, LHS, RHS, solution,h,mode);
     id_csv[0] = NMOS_assigner(1,3,2,0,0,W,L,h,solution,LHS,RHS,mode);
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    // ADDING VOLTAGE STEPPING LOOP
-    
+    // ADDING VOLTAGE STEPPING LOOP  
     while(i < n){
         
         LHS = init_LHS;

@@ -11,21 +11,33 @@
     7) Pulsed Voltage Source - V_pulse(V1, V2, t1, td, tr, tf, tpw, tper, h);
     8) N-MOS Transistor - NMOS_assigner(number, node_vd, node_vg, node_vs, node_vb, h, solution, LHS, RHS, mode);
     9) P-MOS Transistor - PMOS_assigner(number, node_vs, node_vg, node_vd, node_vb, h, solution, LHS, RHS, mode);
+    10) Ring Oscillator - RingOscillatorStages(W, L, R, C, LHS, RHS, solution, h, mode);
 
     The linear components could be assigned inside the main function while the non-linear and dynamic components can be assigned inside the DynamicNonLinear function.
 
     V_pulse also has a special assignment where the normal voltage source needs to be assigned with the initial voltage (V1) inside the RHS_locate list. 
     The V_pulse function will then be called inside the transient simulation loop.
 */
+int const code = 0; // choosing code for transient simulation
+
+// Settings for the Ring Oscillator
+double W_oscillator = 500e-6;
+double L_oscillator = 50e-6;
+double C_oscillator = 10e-12;
+double R_oscillator = 1e3;
+int const cascaded_level = 5; // Number of cascaded ring oscillators 
+int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
+
+// TRANSIENT SIMULATION SETTINGS part 1
+double t_start = 0;
+double t_end = 10e-6;
 
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
     Number of MOSFETs and cascaded levels are assigned above too. External nodes are the nodes which  */
-int const code = 0;
+
 int const external_nodes = 1; // Number of external nodes (excluding ground and ring oscillator loop nodes)
 int const external_mosfets = 0; // Number of standalone mosfets (excluding mosfets from ring oscillator)
-int const cascaded_level = 3; // Number of cascaded ring oscillators 
-int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
 int const no_of_mosfets = external_mosfets  + 2*cascaded_level;// Total number of MOSFETs
 int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
 
@@ -42,11 +54,9 @@ int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
     // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner, RingOscillatorStages)
     /*--------------------------------------------can be changed-------------------------------------------------*/
-    // double W = 100e-6;
-    // double L = 100e-6;
-    RingOscillatorStages(100e-6, 100e-6, 1e3, 1e-15, LHS, RHS, solution, h, mode);
+    RingOscillatorStages(W_oscillator, L_oscillator, R_oscillator, C_oscillator, LHS, RHS, solution, h, mode);
 
-    // the ring oscillator stages are assigned in the following order:
+    // the ring oscillator stages are assigned in the following order or more:
 
     // PMOS_assigner(1, supply_voltage_node, 2, 3, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
     // NMOS_assigner(2, 3, 2, 0, 0, W, L, h, solution, LHS, RHS, mode);
@@ -76,23 +86,20 @@ int main(int argc, const char ** argv){
 
     /*--------------------------------------------can be changed-------------------------------------------------*/
 
-    // TRANSIENT SIMULATION SETTINGS
+    // TRANSIENT SIMULATION SETTINGS part 2
     // The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
     int n = 5001; // 5001 seems to be the sweet spot
     int i = 0;
     // Defining the Time and Timestep for Transient Simulation
-    double t_start = 0;
-    double t_end = 10e-9;
     double t = t_end - t_start;
     double h_time = t/(n-1); // Timestep for the time vector
 
     //Simple timestep control (not perfect)
     double h = 0; // Max timestep for transient simulation
-    if(t_end > 10e-9){
-        h = t/((n-1)/3);
-    }
-    else{
-        h = 2e-11;
+    if(t_end>1e-8){
+        h = t_end/((W_oscillator/L_oscillator)*(n/3));
+    }else{
+        h = t_end/((W_oscillator/L_oscillator)*(n/150)*(C_oscillator/1e-15));
     }
     std::cout << h << std::endl;
     // time vector to be inputted in plot for python analysis
@@ -151,7 +158,11 @@ int main(int argc, const char ** argv){
     
     // OP analysis used as initial condition for next evaluation
     arma::vec solution= arma::zeros(Maxi,Maxj);
+    // Benchmarking for OP analysis
+    auto tstart_op = std::chrono::high_resolution_clock::now();
     solution = NewtonRaphson_system(init_LHS,init_RHS,LHS,RHS,solution,h,mode);
+    auto tstop_op = std::chrono::high_resolution_clock::now();
+
     solution.print("The OP analysis of the circuit is: ");
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // The solution csv that is going to be plotted which contains the values of nodal voltages
@@ -163,6 +174,8 @@ int main(int argc, const char ** argv){
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ADDING TRANSIENT SIMULATION LOOP (includes V_pulse or any time dependent sources)
     mode = 1;
+    
+    auto tstart_trans = std::chrono::high_resolution_clock::now();
     while(i < n){
         
         LHS = init_LHS;
@@ -182,6 +195,15 @@ int main(int argc, const char ** argv){
         i++;
         iter += Maxi;
     }
+    auto tstop_trans = std::chrono::high_resolution_clock::now();
+
+    /* Getting number of milliseconds as a double. */
+    std::chrono::duration<double, std::milli> OP_time = (tstop_op - tstart_op) ;
+    std::chrono::duration<double, std::milli> trans_time = (tstop_trans - tstart_trans);
+
+    std::cout << "DC OP time:" <<  OP_time.count() << "ms\n";
+    std::cout << "Transient time:" <<  trans_time.count() << "ms\n";
+
     /*-----------------------------------------------------------------------------------------------------------*/
     // SAVING THE SOLUTION AND TIME MATRICES INTO CSV FILES
     std::ofstream file("solution.csv");

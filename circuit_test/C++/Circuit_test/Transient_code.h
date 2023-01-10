@@ -6,6 +6,7 @@
 #include <armadillo>
 #include <tuple>
 #include <cmath>
+#include <chrono>
 
 // Matrix stamps assigner using Modified Nodal Analysis
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode);
@@ -214,8 +215,6 @@ arma::mat branch_ext(arma::mat M, int node_x, int node_y){
 // }
 
 double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
-    // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
-    // # we are using a discrete MOSFET, so the vb is connected to the source terminal
 
     double vd = 0;
     double vg = 0;
@@ -268,13 +267,13 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
     double vt0 = 0.7; // default is 0
     double vt = 0;
     double I_DSeq = 0;
-
+    
     double CGSO = 4e-11;
     double CGDO = 4e-11;
     double CGBO = 2e-10;
-    double CGS = CGSO * W;
-    double CGD = CGDO * W;
-    double CGB = CGBO * W;
+    double CGS = CGSO*100e-6;
+    double CGD = CGDO*100e-6;
+    double CGB = CGBO*100e-6;
     double CBD = 6e-17; // typical value for CBD
     double CBS = 6e-17; // typical value for CBS
 
@@ -287,53 +286,25 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+2,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
     Diode_assigner(T_nodes-(4*number)+3,T_nodes-(4*number)+4,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
     }
-    // For the conductances
-    // if(vds>=0){
-        vt = vt0 + gamma*((sqrt(phi-vbs)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    // }else{
-    //     vt = vt0 + gamma*((sqrt(phi-vbd)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    // }
-    // gm = Beta*vds;
-    // gds = Beta*(vgs-vt-vds);
-    // if(vds>=0){
-        if ((vds <= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in linear
-            id = Beta*(vgs-vt-vds/2)*vds*(1+LAMBDA*vds);
-            gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-vds/2);
-            gm = Beta*(1+LAMBDA*vds)*vds;
-            gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else if ((vds >= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in saturation
-            id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
-            gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
-            gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
-            gmb = gm*gamma/(2*sqrt(phi-vbs));
-        }else{ // # the transistor is in cutoff
-            id = 0;
-            gds = 0;
-            gm = 0;
-            gmb = 0;
-        }
-    // }else{ // For depletion mode
-    //     vbs = vbd;
-    //     vgs = vgd;
-    //     vds = -vds;
-    //     if ((vds < (vgs-vt))){ // # the transistor is in linear
-    //         id = Beta*(vgs-vt-1/2*vds)*vds*(1+LAMBDA*vds);
-    //         gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-1/2*vds);
-    //         gm = Beta*(1+LAMBDA*vds)*vds;
-    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
-    //     }else if ((vds > (vgs-vt)) && ((vgs-vt)>0)){ // # the transistor is in saturation
-    //         id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
-    //         gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
-    //         gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
-    //         gmb = gm*gamma/(2*sqrt(phi-vbs));
-    //     }else if((vgs-vt)<0){ // # the transistor is in cutoff
-    //         id = 0;
-    //         gds = 0;
-    //         gm = 0;
-    //         gmb = 0;
-    //     }
-    //     id = -id;
-    // }
+    
+    vt = vt0 + gamma*((sqrt(phi-vbs)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
+
+    if ((vds <= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in linear
+        id = Beta*(vgs-vt-vds/2)*vds*(1+LAMBDA*vds);
+        gds = Beta*(1+LAMBDA*vds)*(vgs-vt-vds)+Beta*LAMBDA*vds*(vgs-vt-vds/2);
+        gm = Beta*(1+LAMBDA*vds)*vds;
+        gmb = gm*gamma/(2*sqrt(phi-vbs));
+    }else if ((vds >= (vgs-vt)) && (vgs >= vt)){ // # the transistor is in saturation
+        id = (Beta/2)*pow((vgs - vt),2) * (1+LAMBDA*vds);
+        gds = (Beta/2)*LAMBDA*pow((vgs-vt),2);
+        gm = Beta*(1+LAMBDA*vds)*(vgs-vt);
+        gmb = gm*gamma/(2*sqrt(phi-vbs));
+    }else{ // # the transistor is in cutoff
+        id = 0;
+        gds = 0;
+        gm = 0;
+        gmb = 0;
+    }
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
     if(code == 0){
@@ -352,9 +323,6 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
 }
 
 double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node_vb, double W, double L, double h, arma::mat &solution, arma::mat &LHS, arma::mat &RHS,  int mode){
-    // # the position of the drain, gate, source, and base voltages are hard-coded for the transistor model
-    // # we are using a discrete MOSFET, so the vb is connected to the source terminal
-
     double vd = 0;
     double vg = 0;
     double vs = 0;
@@ -415,11 +383,11 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
     double CGSO = 4e-11;
     double CGDO = 4e-11;
     double CGBO = 2e-10;
-    double CGS = CGSO * W;
-    double CGD = CGDO * W;
-    double CGB = CGBO * W;
-    double CBD = 6e-17; // 6e-17 typical value for CBD
-    double CBS = 6e-17; // 6e-17 typical value for CBS
+    double CGS = CGSO*100e-6;
+    double CGD = CGDO*100e-6;
+    double CGB = CGBO*100e-6;
+    double CBD = 6e-17; // typical value for CBD
+    double CBS = 6e-17; // typical value for CBS
 
     // # the settings for fet model based on the large signal analysis
     if(code == 0){
@@ -444,19 +412,16 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
         gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
         gm = Beta*(1+LAMBDA*vsd)*vsd;
         gmb = gm*gamma/(2*sqrt(phi-vsb));
-        // std::cout<<"Linear"<<std::endl;
         }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
         id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
         gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
         gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
         gmb = gm*gamma/(2*sqrt(phi-vsb));
-        // std::cout<<"Saturation"<<std::endl;
     }else{ // # the transistor is in cutoff
         id = 0;
         gds = 0;
         gm = 0;
         gmb = 0;
-        // std::cout<<"Cutoff"<<std::endl;
     } 
 
     // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions

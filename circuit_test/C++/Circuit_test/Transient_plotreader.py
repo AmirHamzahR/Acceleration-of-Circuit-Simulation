@@ -48,7 +48,6 @@ def Vs_current(Vs_num,Total_Vs):
 # NODAL VOLTAGES FOR Y-AXIS
 v1 = nodal_voltage(1) # vdd
 v2 = nodal_voltage(2) # pulsed voltage
-v3 = nodal_voltage(3) 
 
 # TIME ARRAY FOR X-AXIS
 time = pd.read_csv('time.csv')
