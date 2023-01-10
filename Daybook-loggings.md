@@ -983,30 +983,17 @@ The two compiler optimizations that will be used are -O1 and -O3. As a start, th
 
 The circuits are named using the format of OscillatorStage_RingOscillator_WidthofOscillator_CapacitorValue to differentiate each other. The parameters used are the same as before which are Vto = +/-0.7, LAMBDA = 0.1, and R_oscillator = 1e3. An example of this naming nomenclature for a 5th Stage Ring OScillator with W = 500e-6, L = 50e-6, C = 10e-12, and same other parameters is 5th_RO_W500u_C10p. Other circuits are also created for W = 500e-9 and different number of stages up to 9th stage ring oscillator. The benchmarking is done in Transient_code.cpp and the table results can be seen below.
 
-| Benchmark circuit       | Matrix size (n x n) |  |    Average execution time / ms (DC)     |         |             |         |         |         |             | Speedup     |
-|-------------------------|---------------------|----------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
-|                         |                     |                                |    O1     |         |             |                   |    O3     |      |     |             |
-|                         |                     | 1st                              | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
-| 3rd_RO_W500u_C10p       | 31 x 31             | 2.2397                           | 2.2585  | 3.6642  | 2.7208      | 1.9296  | 2.1432  | 1.87    | 1.5443      | 1.761833841 |
-| 5th_RO_W500u_C10p       | 51 x 51             | 9.3578                           | 10.1375 | 6.8034  | 8.766233333 | 5.8458  | 6.1205  | 8.045   | 6.670433333 | 1.314192481 |
-| 9th_RO_W500u_C10p       | 91 x 91             | 44.6022                          | 39.2859 | 38.8501 | 40.91273333 | 29.0839 | 28.8663 | 34.5725 | 30.8409     | 1.326573911 |
-| 3rd_RO_W500n_C1f        | 31 x 31             | 2.4085                           | 2.7211  | 1.6771  | 2.2689      | 1.6579  | 1.1887  | 1.7863  | 1.5443      | 1.469209351 |
-| 5th_RO_W500u_C1f        | 51 x 51             | 6.958                            | 9.1434  | 11.8503 | 9.317233333 | 7.0543  | 4.7079  | 8.1161  | 6.6261      | 1.40614137  |
-| 9th_RO_W500u_C1f        | 91 x 91             | 35.8594                          | 33.8426 | 66.2105 | 45.30416667 | 29.7616 | 33.7347 | 30.1597 | 31.21866667 | 1.451188392 |
-| Average Speedup for DC  |                     |                                  |         |         |             |         |         |         |             | 1.454856558 |
-
-
-| Benchmark circuit       | Matrix size (n x n) | Average execution time / ms (DC) |         |         |             |         |         |         |             | Speedup     |
-|-------------------------|---------------------|----------------------------------|---------|---------|-------------|---------|---------|---------|-------------|-------------|
-|                         |                     | O1                               |         |         |             | O3      |         |         |             |             |
-|                         |                     | 1st                              | 2nd     | 3rd     | Average     | 1st     | 2nd     | 3rd     | Average     |             |
-| 3rd_RO_W500u_C10p       | 31 x 31             | 2.2397                           | 2.2585  | 3.6642  | 2.7208      | 1.9296  | 2.1432  | 1.87    | 1.5443      | 1.761833841 |
-| 5th_RO_W500u_C10p       | 51 x 51             | 9.3578                           | 10.1375 | 6.8034  | 8.766233333 | 5.8458  | 6.1205  | 8.045   | 6.670433333 | 1.314192481 |
-| 9th_RO_W500u_C10p       | 91 x 91             | 44.6022                          | 39.2859 | 38.8501 | 40.91273333 | 29.0839 | 28.8663 | 34.5725 | 30.8409     | 1.326573911 |
-| 3rd_RO_W500n_C1f        | 31 x 31             | 2.4085                           | 2.7211  | 1.6771  | 2.2689      | 1.6579  | 1.1887  | 1.7863  | 1.5443      | 1.469209351 |
-| 5th_RO_W500u_C1f        | 51 x 51             | 6.958                            | 9.1434  | 11.8503 | 9.317233333 | 7.0543  | 4.7079  | 8.1161  | 6.6261      | 1.40614137  |
-| 9th_RO_W500u_C1f        | 91 x 91             | 35.8594                          | 33.8426 | 66.2105 | 45.30416667 | 29.7616 | 33.7347 | 30.1597 | 31.21866667 | 1.451188392 |
-| Average Speedup for DC  |                     |                                  |         |         |             |         |         |         |             | 1.454856558 |
+| Benchmark circuit      | Matrix size (n x n) | Average execution time / ms (DC) | Speedup |
+| ---------------------- | ------------------- | -------------------------------- | ------- |
+| O1                     | O3                  |
+| 1st                    | 2nd                 | 3rd                              | Average | 1st | 2nd | 3rd | Average |
+| 3rd_RO_W500u_C10p      | 31 x 31             | 2.2397                           | 2.2585  | 3.6642 | 2.7208 | 1.9296 | 2.1432 | 1.87 | 1.5443 | 1.76183 |
+| 5th_RO_W500u_C10p      | 51 x 51             | 9.3578                           | 10.1375 | 6.8034 | 8.76623 | 5.8458 | 6.1205 | 8.045 | 6.67043 | 1.31419 |
+| 9th_RO_W500u_C10p      | 91 x 91             | 44.6022                          | 39.2859 | 38.8501 | 40.9127 | 29.0839 | 28.8663 | 34.5725 | 30.8409 | 1.32657 |
+| 3rd_RO_W500n_C1f       | 31 x 31             | 2.4085                           | 2.7211  | 1.6771 | 2.2689 | 1.6579 | 1.1887 | 1.7863 | 1.5443 | 1.46921 |
+| 5th_RO_W500u_C1f       | 51 x 51             | 6.958                            | 9.1434  | 11.8503 | 9.31723 | 7.0543 | 4.7079 | 8.1161 | 6.6261 | 1.40614 |
+| 9th_RO_W500u_C1f       | 91 x 91             | 35.8594                          | 33.8426 | 66.2105 | 45.3042 | 29.7616 | 33.7347 | 30.1597 | 31.2187 | 1.45119 |
+| Average Speedup for DC | 1.45486             |
 
 Benchmarking results for DC OP analysis calculation in each circuit using -O1 and -O3
 
