@@ -221,8 +221,7 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
     double vs = 0;
     double vb = 0;
 
-    // # The settings for the large signal analysis model
-    // # uses node_vd as starting reference node for the simulation
+    // The settings for the large signal analysis model
     if(node_vd == 0){
         vd = 0;
     }else
@@ -267,15 +266,42 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
     double vt0 = 0.7; // default is 0
     double vt = 0;
     double I_DSeq = 0;
-    
+
+    // Capacitances settings
     double CGSO = 4e-11;
     double CGDO = 4e-11;
     double CGBO = 2e-10;
-    double CGS = CGSO*100e-6;
-    double CGD = CGDO*100e-6;
-    double CGB = CGBO*100e-6;
-    double CBD = 6e-17; // typical value for CBD
-    double CBS = 6e-17; // typical value for CBS
+    double CGS = CGSO*W;
+    double CGD = CGDO*W;
+    double CGB = CGBO*L;
+    double CBD = 20e-15; // typical value for CBD
+    double CBS = 20e-15; // typical value for CBS
+
+    double FC = 0.5; // Coefficient for forward-bias depletion capacitance formula
+    double PB = 0.8; // Bulk junction potential
+    double CJ = 2e-4; // Zero bias bulk junction capacitance per unit area
+    double MJ = 0.5; // Bulk junction bottom grading coefficient
+    double AD = 200e-12; // Drain area
+    double AS = 200e-12; // Source area
+    double CJSW = 1e-12; // Zero bias bulk junction sidewall capacitance per unit periphery
+    double PD = 20e-6; // Drain junction potential
+    double PS = 20e-6; // Source junction potential
+    double TT = 1e-9; // Transit time
+    double MJSW = 0.5; // Bulk junction sidewall grading coefficient level 1
+    double JSSW = 1e-9; // Bulk junction saturation current per meter of sidewall
+    double JS = 1e-6; // Bulk junction saturation current per meter of junction perimeter
+        
+    if (vbd <= FC*PB){
+        CBD = (CJ*AD)/(pow((1-vbd/PB),MJ)) + (CJSW*PD)/(pow((1-vbd/PB),MJSW));
+    }else{
+        CBD = ((CJ*AD)*(1-(1+MJ)*FC+MJ*vbd/PB))/(pow((1-FC),(1+MJ))) + (CJSW*PD)*(1-(1+MJSW)*FC+MJSW*vbd/PB)/(pow((1-FC),(1+MJSW)));
+    }
+    if (vbs <= FC*PB){
+        CBS = (CJ*AS)/(pow((1-vbs/PB),MJ)) + (CJSW*PS)/(pow((1-vbs/PB),MJSW));
+    }else{
+        CBS = ((CJ*AS)*(1-(1+MJ)*FC+MJ*vbs/PB))/(pow((1-FC),(1+MJ))) + (CJSW*PS)*(1-(1+MJSW)*FC+MJSW*vbs/PB)/(pow((1-FC),(1+MJSW)));
+    }
+
 
     // # the settings for fet model based on the large signal analysis
     if(code == 0){
@@ -306,14 +332,13 @@ double NMOS_assigner(int number, int node_vd, int node_vg, int node_vs, int node
         gmb = 0;
     }
 
-    // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
     if(code == 0){
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
-    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
+    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CGD,h,LHS,RHS,solution,mode); // # Capacitor GDO
     }
-    I_DSeq = id - gds*vds - gm*vgs - gmb*vbs/*/*  /**/; // # 10.190 equation
-    // Is_assigner(node_vs,node_vd,id,LHS,RHS);
+    I_DSeq = id - gds*vds - gm*vgs - gmb*vbs; // # 10.190 equation
+
     Is_assigner(node_vd,node_vs,I_DSeq,LHS,RHS);
     VCCS_assigner(node_vd,node_vs,node_vb,node_vs,gmb,LHS); // assigning gmb
     R_assigner(node_vd,node_vs,cond(gds),LHS,RHS); // # assigning gds
@@ -328,8 +353,7 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
     double vs = 0;
     double vb = 0;
 
-    // # The settings for the large signal analysis model
-    // # uses node_vd as starting reference node for the simulation
+    // The settings for the large signal analysis model
     if(node_vd == 0){
         vd = 0;
     }else
@@ -361,7 +385,8 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
     // depletion mode voltages
     double vdb = vd - vb;
     double vdg = vd - vg; 
-
+    double vbd = vb - vd;
+    double vgd = vg - vd;
 
     double id = 0; 
     double gds = 0; 
@@ -380,14 +405,40 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
     double vt = 0;
     double I_DSeq = 0;
 
+    // Capacitances settings
     double CGSO = 4e-11;
     double CGDO = 4e-11;
     double CGBO = 2e-10;
-    double CGS = CGSO*100e-6;
-    double CGD = CGDO*100e-6;
-    double CGB = CGBO*100e-6;
-    double CBD = 6e-17; // typical value for CBD
-    double CBS = 6e-17; // typical value for CBS
+    double CGS = CGSO*W;
+    double CGD = CGDO*W;
+    double CGB = CGBO*L;
+    double CBD = 20e-15; // typical value for CBD
+    double CBS = 20e-15; // typical value for CBS
+
+    double FC = 0.5; // Coefficient for forward-bias depletion capacitance formula
+    double PB = 0.8; // Bulk junction potential
+    double CJ = 2e-4; // Zero bias bulk junction capacitance per unit area
+    double MJ = 0.5; // Bulk junction bottom grading coefficient
+    double AD = 200e-12; // Drain area
+    double AS = 200e-12; // Source area
+    double CJSW = 1e-12; // Zero bias bulk junction sidewall capacitance per unit periphery
+    double PD = 20e-6; // Drain junction potential
+    double PS = 20e-6; // Source junction potential
+    double TT = 1e-9; // Transit time
+    double MJSW = 0.5; // Bulk junction sidewall grading coefficient level 1
+    double JSSW = 1e-9; // Bulk junction saturation current per meter of sidewall
+    double JS = 1e-6; // Bulk junction saturation current per meter of junction perimeter
+        
+    if (vdb <= FC*PB){
+        CBD = (CJ*AD)/(pow((1-vdb/PB),MJ)) + (CJSW*PD)/(pow((1-vdb/PB),MJSW));
+    }else{
+        CBD = ((CJ*AD)*(1-(1+MJ)*FC+MJ*vdb/PB))/(pow((1-FC),(1+MJ))) + (CJSW*PD)*(1-(1+MJSW)*FC+MJSW*vdb/PB)/(pow((1-FC),(1+MJSW)));
+    }
+    if (vsb <= FC*PB){
+        CBS = (CJ*AS)/(pow((1-vsb/PB),MJ)) + (CJSW*PS)/(pow((1-vsb/PB),MJSW));
+    }else{
+        CBS = ((CJ*AS)*(1-(1+MJ)*FC+MJ*vsb/PB))/(pow((1-FC),(1+MJ))) + (CJSW*PS)*(1-(1+MJSW)*FC+MJSW*vsb/PB)/(pow((1-FC),(1+MJSW)));
+    }
 
     // # the settings for fet model based on the large signal analysis
     if(code == 0){
@@ -396,14 +447,10 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
     R_assigner(T_nodes-(4*number)+4,node_vs,0.1,LHS,RHS); // # RS
     R_assigner(T_nodes-(4*number)+3,node_vb,1,LHS,RHS); // # RB
     Diode_assigner(T_nodes-(4*number)+2,T_nodes-(4*number)+3,1e-14,0.05,CBD,h,LHS,RHS,solution,mode); // # Diode BD
-    Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CGD,h,LHS,RHS,solution,mode); // # Diode BS
+    Diode_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,1e-14,0.05,CBS,h,LHS,RHS,solution,mode); // # Diode BS
     }
-    // If vds>=0, then the transistor is in enhancement mode, otherwise it is in depletion mode
-    // if(vsd>=0){
-        vt = vt0 - gamma*((sqrt(phi-vsb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    // }else{
-    //     vt = vt0 + gamma*((sqrt(phi-vdb)-sqrt(phi))); // # already taking into account the body effect of MOSFETs
-    // }
+
+    vt = vt0 - gamma*((sqrt(phi-vsb)-sqrt(phi))); // already taking into account the body effect of MOSFETs
     
     double n_vt = std::abs(vt); 
 
@@ -412,7 +459,7 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
         gds = Beta*(1+LAMBDA*vsd)*(vsg-n_vt-vsd)+Beta*LAMBDA*vsd*(vsg-n_vt-vsd/2);
         gm = Beta*(1+LAMBDA*vsd)*vsd;
         gmb = gm*gamma/(2*sqrt(phi-vsb));
-        }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
+    }else if ((vds <= (vgs-vt)) && (vgs <= vt)){ // # the transistor is in saturation
         id = (Beta/2)*pow((vsg - n_vt),2) * (1+LAMBDA*vsd);
         gds = (Beta/2)*LAMBDA*pow((vsg-n_vt),2);
         gm = Beta*(1+LAMBDA*vsd)*(vsg-n_vt);
@@ -423,12 +470,11 @@ double PMOS_assigner(int number, int node_vs, int node_vg, int node_vd, int node
         gm = 0;
         gmb = 0;
     } 
-
-    // might need to change the capacitor values according to the textbook model which takes in the linear, saturation, and cutoff regions
+    
     if(code == 0){
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+4,CGS,h,LHS,RHS,solution,mode); // # Capacitor GSO
     C_assigner(T_nodes-(4*number)+1,T_nodes-(4*number)+3,CGB,h,LHS,RHS,solution,mode); // # Capacitor GBO
-    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CBS,h,LHS,RHS,solution,mode); // # Capacitor BSO
+    C_assigner(T_nodes-(4*number)+4,T_nodes-(4*number)+3,CGD,h,LHS,RHS,solution,mode); // # Capacitor GDO
     }
     I_DSeq = id - gds*vsd - gm*vsg - gmb*vsb;
 
@@ -487,18 +533,18 @@ double Vs_assigner(int node_x, int node_y, double V_value, arma::mat &LHS, arma:
 
 // Capacitor stamp assigner
 void C_assigner(int node_x,int node_y,double C, double h, arma::mat &LHS, arma::mat &RHS, arma::mat solution, int mode){
-    // this if else statment uses trapezoidal formula
+    
     double x = 0;
     double x1 = 0;
-
+    // this if else statment uses trapezoidal formula
     if(mode>0){
-        x = 2*C/h;
+        x = C/h;
         if(node_x == 0){
-            x1 = 2*C*(solution(node_y-1,0))/h;
+            x1 = C*(solution(node_y-1,0))/h;
         }else if(node_y == 0){
-            x1 = 2*C*(solution(node_x-1,0))/h;
+            x1 = C*(solution(node_x-1,0))/h;
         }else{
-            x1 = 2*C*(solution(node_x-1,0)-solution(node_y-1,0))/h;
+            x1 = C*(solution(node_x-1,0)-solution(node_y-1,0))/h;
         }
     }
     else{
@@ -558,15 +604,15 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
         x1 = 0;
     }
     else if(node_x == 0){
-        x = (Is/VT)*(exp(-val_nodey/VT)) + cd/h;
+        x = (Is/VT)*(exp(-val_nodey/VT));
         x1 = (x*(-val_nodey)-Is*(exp((-val_nodey)/VT)-1));
     }
     else if(node_y == 0){
-        x = (Is/VT)*(exp((val_nodex)/VT)) + cd/h;
+        x = (Is/VT)*(exp((val_nodex)/VT));
         x1 = (x*(val_nodex)-Is*(exp((val_nodex)/VT)-1));
     }
     else{
-        x = (Is/VT)*(exp((val_nodex-val_nodey)/VT)) + cd/h;
+        x = (Is/VT)*(exp((val_nodex-val_nodey)/VT));
         x1 = (x*(val_nodex-val_nodey)-Is*(exp((val_nodex-val_nodey)/VT)-1));
     }
     
@@ -574,6 +620,7 @@ void Diode_assigner(int node_x, int node_y, double Is, double VT, double cd, dou
     Is_assigner(node_x,node_y,x1,LHS,RHS);
     // Matrix stamp for a diode on LHS
     R_assigner(node_x,node_y,cond(x),LHS,RHS);
+    C_assigner(node_x,node_y,cd,h,LHS,RHS,solution,mode);
 }
 
 // Newton Raphson system solver for non-linear and dynamic elements
@@ -586,7 +633,7 @@ arma::mat NewtonRaphson_system(arma::mat const init_LHS, arma::mat const init_RH
     error.row(0) = error_val;
     int iteration_counter = 0;
     arma::mat delta = arma::zeros(row_size,1);
-    while((error(0,0) > eps_val) && (iteration_counter < 8)){ // iteration counter can be changed depending on the non-linearity of the circuit
+    while((error(0,0) > eps_val) && (iteration_counter < 50)){ // iteration counter can be changed depending on the non-linearity of the circuit
         auto matrices = DynamicNonLinear(LHS,RHS,solution,h,mode);
         delta = arma::solve(matrices.first,(matrices.first*solution) - matrices.second);
         error.row(0) = arma::max(arma::abs(delta));

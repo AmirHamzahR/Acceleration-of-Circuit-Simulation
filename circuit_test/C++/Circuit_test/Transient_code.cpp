@@ -21,16 +21,17 @@
 int const code = 0; // choosing code for transient simulation
 
 // Settings for the Ring Oscillator
-double W_oscillator = 500e-6;
-double L_oscillator = 50e-6;
-double C_oscillator = 10e-12;
+double W_oscillator = 500e-9;
+double L_oscillator = 50e-9;
+double C_oscillator = 1e-15;
 double R_oscillator = 1e3;
 int const cascaded_level = 5; // Number of cascaded ring oscillators 
 int const supply_voltage_node = 1; // supply voltage node for the ring oscillator
 
-// TRANSIENT SIMULATION SETTINGS part 1
+// TRANSIENT SIMULATION SETTINGS
 double t_start = 0;
-double t_end = 10e-6;
+double t_end = 1e-9;
+double h = t_end/5000; // t_end/5000 is the default value
 
 /*  TOTAL NUMBER OF NODES EXCLUDING GROUND
     Two port components such as resistors, initially adds 2 nodes. If more than 1 component is added, it then adds 1 node per component.
@@ -52,24 +53,9 @@ int const T_nodes = external_nodes + 4*no_of_mosfets + 2*cascaded_level;
 
 // Assigning the stamp matrices for dynamic and non-linear components
 std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, arma::mat solution, double h, int mode){
-    // (Diode_assigner, PMOS_assigner, NMOS_assigner, C_assigner, RingOscillatorStages)
+    // (All the circuit assigners can be used except for voltage and current sources)
     /*--------------------------------------------can be changed-------------------------------------------------*/
     RingOscillatorStages(W_oscillator, L_oscillator, R_oscillator, C_oscillator, LHS, RHS, solution, h, mode);
-
-    // the ring oscillator stages are assigned in the following order or more:
-
-    // PMOS_assigner(1, supply_voltage_node, 2, 3, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(2, 3, 2, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(3, 4, 1e3, LHS, RHS);
-    // C_assigner(0, 4, 10e-12, h, LHS, RHS, solution, mode);
-    // PMOS_assigner(3, supply_voltage_node, 4, 5, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(4, 5, 4, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(5, 6, 1e3, LHS, RHS);
-    // C_assigner(0, 6, 10e-12, h, LHS, RHS, solution, mode);
-    // PMOS_assigner(5, supply_voltage_node, 6, 7, supply_voltage_node, W, L, h, solution, LHS, RHS, mode);
-    // NMOS_assigner(6, 7, 6, 0, 0, W, L, h, solution, LHS, RHS, mode);
-    // R_assigner(7, 2, 1e3, LHS, RHS);
-    // C_assigner(0, 2, 10e-12, h, LHS, RHS, solution, mode);
     
     arma::mat J_x = LHS;
     arma::mat F_x = RHS;
@@ -79,31 +65,11 @@ std::pair<arma::mat,arma::mat> DynamicNonLinear(arma::mat &LHS, arma::mat &RHS, 
 
 // Main function for the circuit simulation
 int main(int argc, const char ** argv){
+    auto t1 = std::chrono::high_resolution_clock::now(); // Start time
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // Size of matrix
     int Maxi{T_nodes}; // defined in header file (Transient_code.h)
     int Maxj{Maxi};
-
-    /*--------------------------------------------can be changed-------------------------------------------------*/
-
-    // TRANSIENT SIMULATION SETTINGS part 2
-    // The amount of iterations for the timestep, the higher the more accurate but uses more computing resources
-    int n = 5001; // 5001 seems to be the sweet spot
-    int i = 0;
-    // Defining the Time and Timestep for Transient Simulation
-    double t = t_end - t_start;
-    double h_time = t/(n-1); // Timestep for the time vector
-
-    //Simple timestep control (not perfect)
-    double h = 0; // Max timestep for transient simulation
-    if(t_end>1e-8){
-        h = t_end/((W_oscillator/L_oscillator)*(n/3));
-    }else{
-        h = t_end/((W_oscillator/L_oscillator)*(n/150)*(C_oscillator/1e-15));
-    }
-    std::cout << h << std::endl;
-    // time vector to be inputted in plot for python analysis
-    arma::mat time = arange(t_start,h_time,n);
     
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // ASSIGNING THE STAMPS TO THE LHS AND RHS MATRICES
@@ -124,23 +90,24 @@ int main(int argc, const char ** argv){
     // ASSIGNING THE VOLTAGE SOURCES (Vs_assigner)
     // Pulse voltage settings
     // double t1 = 0; // time used for the loop
-    // double V1 = 2;
-    // double V2 = 6;
+    // double V1 = 0;
+    // double V2 = 5;
     // double td = 1e-3;
-    // double tr = 0.5e-3;
-    // double tf = 0.2e-3;
-    // double tpw = 2e-3;
-    // double tper = 4e-3;
+    // double tr = 1e-3;
+    // double tf = 1e-3;
+    // double tpw = 0;
+    // double tper = 2e-3;
 
+    // std::vector<double> RHS_locate = {
+    //     // Assigning the voltage matrix on LHS and RHS for the pulse voltage
+    //     Vs_assigner(2,0,V1,LHS,RHS)
+    // };
     // Assigning DC voltage sources
     Vs_assigner(supply_voltage_node,0,5,LHS,RHS); // supply voltage for the ring oscillator, vdd
 
     // Assigning the stamps that would affect the RHS in transient simulation 
     // (only for  time-dependent voltage, e.g. pulse voltages)
-    // std::vector<double> RHS_locate = {
-    //     // Assigning the voltage matrix on LHS and RHS for the pulse voltage
-    //     Vs_assigner(1,0,V1,LHS,RHS)
-    // };
+    
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // Checking the LHS and RHS matrices
     LHS.print("LHS matrix =");
@@ -167,16 +134,17 @@ int main(int argc, const char ** argv){
     /*----------------------------------------------fixed--------------------------------------------------------*/
     // The solution csv that is going to be plotted which contains the values of nodal voltages
     // and voltage source currents
-    arma::vec solution_csv = arma::ones(n*Maxi,1);
+    arma::vec solution_csv = solution;
     arma::vec Max_I = arma::zeros(1,1);
     Max_I.row(0).col(0) = Maxi;
-    int iter = 0;
+    arma::mat zero_ext = arma::zeros(1,1);
     /*--------------------------------------------can be changed-------------------------------------------------*/
     // ADDING TRANSIENT SIMULATION LOOP (includes V_pulse or any time dependent sources)
+    int i = 0;
+    double time_trans = t_start;
     mode = 1;
-    
     auto tstart_trans = std::chrono::high_resolution_clock::now();
-    while(i < n){
+    while(time_trans < t_end){
         
         LHS = init_LHS;
         RHS = init_RHS;
@@ -189,13 +157,14 @@ int main(int argc, const char ** argv){
         // Calling the Newton-Raphson system here
         solution = NewtonRaphson_system(init_LHS,init_RHS, LHS, RHS, solution,h,mode);
         // Assigning the variables that will be plotted and analysed as seen in a circuit simulator
-        for(int a = 0; a<Maxi; a++){
-            solution_csv[iter+a] = solution[a];
-        }
+        solution_csv = arma::join_cols(solution_csv,solution);
         i++;
-        iter += Maxi;
+        time_trans += h;
     }
     auto tstop_trans = std::chrono::high_resolution_clock::now();
+    // time vector to be inputted in plot for python analysis
+    arma::mat time = arange(t_start,h,i);
+    
 
     /* Getting number of milliseconds as a double. */
     std::chrono::duration<double, std::milli> OP_time = (tstop_op - tstart_op) ;
@@ -218,6 +187,10 @@ int main(int argc, const char ** argv){
     file3 << "time" << std::endl;
     time.save(file3, arma::csv_ascii);
     file3.close();
+
+    auto t2 = std::chrono::high_resolution_clock::now(); // End time
+    std::chrono::duration<double, std::milli> time_span = (t2 - t1) ;
+    std::cout << "Total time:" <<  time_span.count() << "ms\n";
 
     return 0;
     /*-----------------------------------------------------------------------------------------------------------*/
