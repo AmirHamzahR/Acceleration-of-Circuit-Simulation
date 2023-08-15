@@ -1,7 +1,7 @@
 ![AoCs Banner](circuit_test/pics/Banner.png)
 
 # Basic Overview
-An MEng project which creates an optimizable circuit simulator mainly in C++ but also tested in Python and MATLAB. The purpose is to test how far softwares and hardware could go along together in achieving the best performance benchmarks. The main method in simulating these circuits is by using LU decomposition for the sparse matrices from the circuit variables. This is by converting the circuit nodes into matrices using the Modified Nodal Analysis methodology,
+An MEng project which creates an optimizable circuit simulator mainly in C++ ([Armadillo library](https://arma.sourceforge.net/docs.html)) but also tested in Python ([NumPy](https://numpy.org/doc/), [Matplotlib](https://matplotlib.org/stable/index.html), [Pandas](https://pandas.pydata.org/docs/) library)  and MATLAB. The purpose is to test how far softwares and hardware could go along together in achieving the best performance benchmarks. The main method in simulating these circuits is by using LU decomposition for the sparse matrices from the circuit variables. This is by converting the circuit nodes into matrices using the Modified Nodal Analysis methodology,
 
 ![MNApng](circuit_test/pics/MNA.png)
 
@@ -25,7 +25,7 @@ The basic installation of the overall github code by copying the code using the 
 
 # Circuit Components and Analysis Instructions
 
-The main cpp file is named as `Transient_code.cpp` and is located in the `\main\Transient_code.cpp` path. To assign the circuit components, it follows a similar assignment for any SPICE simulators.  The circuit component functions are called from the header file `Transient_code.h` and assigned inside the `main` and `DynamicNonlinear` function in `Transient_code.cpp`.
+The main cpp file to run the circuit simulator is named as [`Transient_code.cpp`](main\Transient_code.cpp). To assign the circuit components, it follows a similar assignment for any SPICE simulators.  The circuit component functions are called from the header file [`Transient_code.h`](main\Transient_code.h) and assigned inside the `main` and `DynamicNonlinear` function in `Transient_code.cpp`.
 
 ### _Resistor Assignment_
 Resistor R, node x, node_y, value
@@ -110,6 +110,14 @@ Define stamp matrices for dynamic and non-linear components using `DynamicNonLin
 - `solution.csv`: Nodal voltages and currents.
 - `MaxI.csv`: Maximum current values.
 - `time.csv`: Time values.
+
+### Plotting Simulation Results with [Transientplotreader.py](main\Transientplotreader.py)
+
+1. Save the provided code as `Transientplotreader.py`.
+2. Make sure you have `pandas`, `matplotlib`, and `numpy` installed (you can install them using `pip` if not).
+3. Run the `Transientplotreader.py` code in your preferred Python environment.
+
+This code reads and processes the CSV data from the circuit simulation and generates plots for nodal voltages and currents. Adjust the plot settings and the voltage/current sources in the code as needed to visualize the simulation results effectively.
 
 ### Execution and Benchmarking
 - Code supports DC OP Analysis and Transient Analysis.
