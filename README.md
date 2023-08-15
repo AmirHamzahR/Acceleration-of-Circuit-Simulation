@@ -25,53 +25,64 @@ The basic installation of the overall github code by copying the code using the 
 
 # Circuit Components and Analysis Instructions
 
-These are assigned inside the `main` function in `Transient_code.cpp`. The circuit component functions are called from the header file `Transient_code.h`.
+The main cpp file is named as `Transient_code.cpp` and is located in the `\main\Transient_code.cpp` path. To assign the circuit components, it follows a similar assignment for any SPICE simulators.  The circuit component functions are called from the header file `Transient_code.h` and assigned inside the `main` and `DynamicNonlinear` function in `Transient_code.cpp`.
 
 ### _Resistor Assignment_
+Resistor R, node x, node_y, value
 ```cpp
 R_assigner(node_x, node_y, resistance_value, LHS, RHS);
 ```
+
 ### _Capacitor Assignment_
+Capacitor C, node x, node y, capacitance value, timestep
 ```cpp
 C_assigner(node_x, node_y, capacitance_value, timestep, LHS, RHS, solution, mode);
 ```
 
 ### _Diode Assignment_
+Diode D, node x, node y, Is, VT, cd, timestep
 ```cpp
 Diode_assigner(node_x, node_y, Is, VT, cd, timestep, LHS, RHS, solution, mode);
 ```
 
 ### _Current Source Assignment_
+Current Source Is, node x, node y, current value
 ```cpp
 Is_assigner(node_x, node_y, current_value, LHS, RHS);
 ```
 
 ### _Voltage Source Assignment_
+Voltage Source Vs, node x, node y, voltage value
 ```cpp
 Vs_assigner(node_x, node_y, voltage_value, LHS, RHS);
 ```
 
 ### _Voltage-Controlled Current Source (VCCS) Assignment_
+VCCS, node x, node y, node cx, node cy, transconductance value
 ```cpp
 VCCS_assigner(node_x, node_y, node_cx, node_cy, transconductance, LHS);
 ```
 
 ### _Pulsed Voltage Source Assignment_
+Pulsed Voltage Source V, V1, V2, t1, td, tr, tf, tpw, tper, timestep
 ```cpp
 V_pulse(V1, V2, t1, td, tr, tf, tpw, tper, timestep);
 ```
 
 ### _N-MOS Transistor Assignment_
+N-MOS Transistor, number, node vd, node vg, node vs, node vb, timestep
 ```cpp
 NMOS_assigner(number, node_vd, node_vg, node_vs, node_vb, timestep, solution, LHS, RHS, mode);
 ```
 
 ### _P-MOS Transistor Assignment_
+P-MOS Transistor, number, node vs, node vg, node vd, node vb, timestep
 ```cpp
 PMOS_assigner(number, node_vs, node_vg, node_vd, node_vb, timestep, solution, LHS, RHS, mode);
 ```
 
 ### _Ring Oscillator Assignment_
+Ring Oscillator, W, L, R, C, timestep
 ```cpp
 RingOscillatorStages(W, L, R, C, LHS, RHS, solution, timestep, mode);
 ```
