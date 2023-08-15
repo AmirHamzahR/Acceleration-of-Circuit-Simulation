@@ -25,7 +25,7 @@ The basic installation of the overall github code by copying the code using the 
 
 # Circuit Components and Analysis Instructions
 
-The main cpp file to run the circuit simulator is named as [`Transient_code.cpp`](main\Transient_code.cpp). To assign the circuit components, it follows a similar assignment for any SPICE simulators.  The circuit component functions are called from the header file [`Transient_code.h`](main\Transient_code.h) and assigned inside the `main` and `DynamicNonlinear` function in `Transient_code.cpp`.
+The main cpp file to run the circuit simulator is named as [`Transient_code.cpp`](main/Transient_code.cpp). To assign the circuit components, it follows a similar assignment for any SPICE simulators.  The circuit component functions are called from the header file [`Transient_code.h`](main/Transient_code.h) and assigned inside the `main` and `DynamicNonlinear` function in `Transient_code.cpp`.
 
 ### _Resistor Assignment_
 Resistor R, node x, node_y, value
@@ -111,7 +111,7 @@ Define stamp matrices for dynamic and non-linear components using `DynamicNonLin
 - `MaxI.csv`: Maximum current values.
 - `time.csv`: Time values.
 
-### Plotting Simulation Results with [Transientplotreader.py](main\Transientplotreader.py)
+### Plotting Simulation Results with [Transientplotreader.py](main/Transientplotreader.py)
 
 1. Save the provided code as `Transientplotreader.py`.
 2. Make sure you have `pandas`, `matplotlib`, and `numpy` installed (you can install them using `pip` if not).
