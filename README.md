@@ -111,7 +111,7 @@ Define stamp matrices for dynamic and non-linear components using `DynamicNonLin
 - `MaxI.csv`: Maximum current values.
 - `time.csv`: Time values.
 
-### Plotting Simulation Results with [Transientplotreader.py](main/Transientplotreader.py)
+### Plotting Simulation Results with [Transientplotreader.py](main/Transient_plotreader.py)
 
 1. Save the provided code as `Transientplotreader.py`.
 2. Make sure you have `pandas`, `matplotlib`, and `numpy` installed (you can install them using `pip` if not).
