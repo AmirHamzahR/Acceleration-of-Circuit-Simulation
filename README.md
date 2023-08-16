@@ -127,4 +127,9 @@ Adjust component values, nodes, time settings, and assignments as needed.
 ```
 This Markdown document includes instructions for all the circuit components and types of analysis as requested.
 ```
+# License
+
+This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) and is open for any contributions.
+
+> All documents are referenced from the University of Edinburgh
 
