@@ -124,9 +124,7 @@ This code reads and processes the CSV data from the circuit simulation and gener
 - Displays execution times for both analyses.
 
 Adjust component values, nodes, time settings, and assignments as needed.
-```
-This Markdown document includes instructions for all the circuit components and types of analysis as requested.
-```
+
 # License
 
 This project is licensed under the [MIT License](https://opensource.org/licenses/MIT) and is open for any contributions.
