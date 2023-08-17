@@ -17,11 +17,28 @@ Here is the high-level diagram of how the overall circuit code flowchart:
 
 ![HighLevel](circuit_test/pics/HighLevel.png)
 
-# Installation
+## Pre-requisite
 
-The basic installation of the overall github code by copying the code using the git command line
+Before you begin, ensure you have the following libraries and tools installed:
 
-> git clone https://github.com/AmirHamzahR/Acceleration-of-Circuit-Simulation.git
+- **C++**: The core implementation of the circuit simulator is done in C++. You'll need a C++ compiler and build tools to compile and run the code.
+- **[Armadillo Library](https://arma.sourceforge.net/docs.html)**: Used for linear algebra operations and matrix calculations in C++.
+- **Python**: The simulation results are analyzed and visualized using Python scripts.
+- **[NumPy](https://numpy.org/doc/)**: A fundamental package for scientific computing with Python.
+- **[Matplotlib](https://matplotlib.org/stable/index.html)**: A plotting library for creating static, animated, and interactive visualizations in Python.
+- **[Pandas](https://pandas.pydata.org/docs/)**: A data manipulation and analysis library for Python.
+- **MATLAB**: Some testing and analysis might be done in MATLAB.
+
+## Installation and Setup
+
+To begin working with this project, follow these steps:
+
+1. Clone the project repository using Git:
+   ```bash
+   git clone https://github.com/AmirHamzahR/Acceleration-of-Circuit-Simulation.git
+   ```
+
+2. Install the required libraries mentioned above as per your selected programming languages (C++, Python, MATLAB).
 
 # Circuit Components and Analysis Instructions
 
